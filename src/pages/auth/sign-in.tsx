@@ -26,8 +26,8 @@ export function SignIn() {
                             <Input id="email" type="email" placeholder="exemplo@mindflush.com" />
                         </div>
 
-                        <Button className="w-full" type="submit">
-                            Entrar no painel
+                        <Button className="w-full cursor-pointer hover:bg-blue-700" type="submit">
+                            Entrar
                         </Button>
                     </form>
                 </div>

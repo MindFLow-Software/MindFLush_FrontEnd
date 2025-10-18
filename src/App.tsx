@@ -8,8 +8,8 @@ import { ThemeProvider } from './components/theme/theme-provider'
 export function App() {
   return (
     <HelmetProvider>
-      <ThemeProvider defaultTheme="dark" storageKey="pizzashop-theme">
-        <Helmet titleTemplate="%s | pizza.shop" />
+      <ThemeProvider defaultTheme="light" storageKey="MindFlush-theme">
+        <Helmet titleTemplate="%s | MindFlush" />
         <Toaster richColors />
         <RouterProvider router={router} />
       </ThemeProvider>

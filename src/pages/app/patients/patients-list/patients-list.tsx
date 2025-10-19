@@ -14,7 +14,7 @@ import { Pagination } from '@/components/pagination'
 export function PatientsList() {
     return (
         <>
-            <Helmet title="Pacientes" />
+            <Helmet title="Lista de Pacientes" />
 
             <div className="flex flex-col gap-4 mt-4">
                 <h1 className="text-3xl font-bold tracking-tight">Lista de Pacientes</h1>

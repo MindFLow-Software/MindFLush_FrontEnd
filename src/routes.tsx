@@ -7,6 +7,7 @@ import { SignUp } from './pages/auth/sign-up'
 import { PatientsList } from './pages/app/patients/patients-list/patients-list'
 import { Dashboard } from './pages/app/dashboard/dashboard'
 import { NotFound } from './pages/404'
+import { NewPatients } from './pages/app/patients/new-patients/new-patients'
 
 export const router = createBrowserRouter([
   {
@@ -17,6 +18,10 @@ export const router = createBrowserRouter([
       {
         path: '/',
         element: <Dashboard />,
+      },
+      {
+        path: '/new-patients',
+        element: <NewPatients />,
       },
       {
         path: '/patients-list',

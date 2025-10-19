@@ -7,7 +7,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { PatitentsTableRow } from './patients-table-row'
+import { PatientsTableRow } from './patients-table-row'
 import { PatientsTableFilters } from './patients-table-filters'
 import { Pagination } from '@/components/pagination'
 
@@ -16,7 +16,7 @@ export function Patients() {
         <>
             <Helmet title="Pacientes" />
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 mt-4">
                 <h1 className="text-3xl font-bold tracking-tight">Pacientes</h1>
                 <div className="space-y-2.5">
                     <PatientsTableFilters />
@@ -37,7 +37,7 @@ export function Patients() {
                             </TableHeader>
                             <TableBody>
                                 {Array.from({ length: 10 }).map((_, i) => {
-                                    return <PatitentsTableRow key={i} />
+                                    return <PatientsTableRow key={i} />
                                 })}
                             </TableBody>
                         </Table>

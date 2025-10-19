@@ -79,11 +79,11 @@ const data = {
             items: [
                 {
                     title: "Cadastro de Pacientes",
-                    url: "/patients",
+                    url: "/Newpatients",
                 },
                 {
                     title: "Lista de Pacientes",
-                    url: "#",
+                    url: "/patients-list",
                 },
                 {
                     title: "Prontuários",

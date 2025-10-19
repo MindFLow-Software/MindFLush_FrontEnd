@@ -1,4 +1,4 @@
-import { Search, UserPen, X } from 'lucide-react'
+import { Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { TableCell, TableRow } from '@/components/ui/table'
@@ -26,24 +26,14 @@ export function PatientsTableRow() {
             <TableCell className="font-medium">Paulo Octavio de OliveiraStraforini</TableCell>
             <TableCell className="text-muted-foreground"> 06/09/2004 </TableCell>
             <TableCell className="text-muted-foreground">em 2 dias</TableCell>
+            <TableCell className="text-muted-foreground">15988888888</TableCell>
+            <TableCell className="text-muted-foreground">Masculino</TableCell>
 
             <TableCell>
                 <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-slate-400" />
                     <span className="font-medium text-muted-foreground">Em acompanhamento</span>
                 </div>
-            </TableCell>
-            <TableCell>
-                <Button variant="outline" size="xs">
-                    <UserPen className="mr-2 h-3 w-3" />
-                    Editar
-                </Button>
-            </TableCell>
-            <TableCell>
-                <Button variant="ghost" size="xs">
-                    <X className="mr-2 h-3 w-3" />
-                    Excluir
-                </Button>
             </TableCell>
         </TableRow>
     )

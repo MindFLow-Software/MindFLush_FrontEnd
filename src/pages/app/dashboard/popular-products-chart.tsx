@@ -58,7 +58,7 @@ export function PopularSessionsChart() {
                             innerRadius={64}
                             strokeWidth={8}
                             labelLine={false}
-                            label={(props: PieLabelRenderrPops) => {
+                            label={(props: any) => {
                                 const cx = props.cx ?? 0
                                 const cy = props.cy ?? 0
                                 const midAngle = props.midAngle ?? 0

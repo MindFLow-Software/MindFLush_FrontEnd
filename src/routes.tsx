@@ -4,7 +4,7 @@ import { AppLayout } from './pages/_layouts/app'
 import { AuthLayout } from './pages/_layouts/auth'
 import { SignIn } from './pages/auth/sign-in'
 import { SignUp } from './pages/auth/sign-up'
-import { PatientsList } from './pages/app/patients/new-patients/patients-list'
+import { PatientsList } from './pages/app/patients/patients-list/patients-list'
 import { Dashboard } from './pages/app/dashboard/dashboard'
 import { NotFound } from './pages/404'
 

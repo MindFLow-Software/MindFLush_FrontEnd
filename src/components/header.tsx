@@ -1,6 +1,5 @@
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
-import { AccountMenu } from "@/components/account-menu"
 import { ThemeToggle } from "./theme/theme-toggle"
 
 export function Header() {
@@ -14,7 +13,6 @@ export function Header() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
-          <AccountMenu />
         </div>
       </div>
     </header>

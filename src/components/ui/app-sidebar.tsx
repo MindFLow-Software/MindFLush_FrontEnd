@@ -123,6 +123,14 @@ const data = {
                     title: "Planos e Assinaturas",
                     url: "#",
                 },
+                {
+                    title: "Saques",
+                    url: "#",
+                },
+                {
+                    title: "Cobrança",
+                    url: "#",
+                },
             ],
         },
         {

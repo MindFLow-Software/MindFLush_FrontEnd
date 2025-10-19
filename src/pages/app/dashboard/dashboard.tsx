@@ -3,6 +3,8 @@ import { MonthRevenueCard } from './month-revenue-card'
 import { MonthPatientsAmountCard } from './month-patients-amount-card'
 import { MonthCancellationsAmountCard } from './month-cancellations-amount-card'
 import { DaySessionsAmountCard } from './day-sessions-amount-card'
+import { SessionsChart } from './sessions-chart'
+import { PopularSessionsChart } from './popular-products-chart'
 
 export function Dashboard() {
   return (
@@ -12,11 +14,18 @@ export function Dashboard() {
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
 
         <div className="grid grid-cols-4 gap-4">
-            <MonthRevenueCard/>
-            <MonthPatientsAmountCard/>
-            <MonthCancellationsAmountCard/>
-            <DaySessionsAmountCard/>
+          <MonthRevenueCard />
+          <MonthPatientsAmountCard />
+          <MonthCancellationsAmountCard />
+          <DaySessionsAmountCard />
         </div>
+      </div>
+      <div className="grid grid-cols-4 gap-4">
+        <SessionsChart />
+      </div>
+      <div className="grid grid-cols-4 gap-4">
+        <PopularSessionsChart />
+
       </div>
     </>
   )

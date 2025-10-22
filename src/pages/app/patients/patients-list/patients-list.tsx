@@ -33,6 +33,8 @@ export function PatientsList() {
                                     <TableHead className="w-[140px]">Telefone</TableHead>
                                     <TableHead className="w-[140px]">Gênero</TableHead>
                                     <TableHead className="w-[140px]">Status</TableHead>
+                                    <TableHead className="w-[140px]">Opções</TableHead>
+
 
                                 </TableRow>
                             </TableHeader>

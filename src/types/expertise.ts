@@ -9,4 +9,6 @@ export type Expertise =
   | "NEUROPSYCHOLOGY";
 
 // @_types/psychologist-role.ts
-export type PsychologistRole =| "PSYCHOLOGIST" | "PATIENT";
+export type PsychologistRole = | "PSYCHOLOGIST" | "PATIENT";
+export type PatientRole = | "PATIENT";
+

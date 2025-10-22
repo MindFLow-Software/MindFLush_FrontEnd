@@ -78,10 +78,6 @@ const data = {
             icon: Users2,
             items: [
                 {
-                    title: "Cadastro de Pacientes",
-                    url: "/new-patients",
-                },
-                {
                     title: "Lista de Pacientes",
                     url: "/patients-list",
                 },

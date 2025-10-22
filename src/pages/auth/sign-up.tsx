@@ -137,7 +137,7 @@ export function SignUp() {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className=" grid-cols-4 sm:grid-cols-4 gap-4 space-y-2">
                             <Label htmlFor="dateOfBirth">Data de Nascimento</Label>
                             <Input id="dateOfBirth" type="date" {...register("dateOfBirth", { valueAsDate: true })} />
                         </div>
@@ -154,7 +154,6 @@ export function SignUp() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="PSYCHOLOGIST">Psicólogo</SelectItem>
-                                            <SelectItem value="PATIENT">Paciente</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 )}

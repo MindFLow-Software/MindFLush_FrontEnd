@@ -10,8 +10,16 @@ export function AuthLayout() {
                     <span className="font-semibold">MindFlush</span>
                 </div>
 
-                <footer className="text-sm">
-                    Painel central &copy; MindFLush - {new Date().getFullYear()}
+                <div className="flex flex-1 items-center justify-center">
+                    <img
+                        src="logo.svg"
+                        alt="Logo MindFlush"
+                        className="w-100 h-auto opacity-90"
+                    />
+                </div>
+
+                <footer className="text-sm text-center">
+                    Painel central &copy; MindFlush - {new Date().getFullYear()}
                 </footer>
             </div>
 

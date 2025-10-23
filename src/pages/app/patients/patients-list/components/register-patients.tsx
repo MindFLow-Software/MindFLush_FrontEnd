@@ -130,7 +130,7 @@ export function RegisterPatients() {
                     <div className="flex flex-col items-center">
                         <Label htmlFor="gender">Gênero</Label>
                         <Select >
-                            <SelectTrigger>
+                            <SelectTrigger className="mt-2">
                                 <SelectValue placeholder="Selecione" />
                             </SelectTrigger>
                             <SelectContent>
@@ -145,7 +145,7 @@ export function RegisterPatients() {
                     <div className="flex flex-col items-center">
                         <Label htmlFor="role">Perfil</Label>
                         <Select defaultValue="PATIENT">
-                            <SelectTrigger>
+                            <SelectTrigger className="mt-2">
                                 <SelectValue placeholder="Selecione" />
                             </SelectTrigger>
                             <SelectContent>
@@ -158,7 +158,7 @@ export function RegisterPatients() {
                     <div className="flex flex-col items-center">
                         <Label htmlFor="isActive">Ativo?</Label>
                         <Select defaultValue="true">
-                            <SelectTrigger>
+                            <SelectTrigger className="mt-2">
                                 <SelectValue placeholder="Selecione" />
                             </SelectTrigger>
                             <SelectContent>

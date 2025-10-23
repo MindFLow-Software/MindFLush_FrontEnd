@@ -17,13 +17,59 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { formatCEP } from "@/utils/formatCEP"
 import { formatCPF } from "@/utils/formatCPF"
 import { formatPhone } from "@/utils/formatPhone"
-
+import { registerPatients, type RegisterPatientsBody } from "@/api/register-patients"
 
 export function RegisterPatients() {
     const [date, setDate] = useState<Date | undefined>()
     const [cpf, setCpf] = useState("")
     const [phone, setPhone] = useState("")
     const [cep, setCep] = useState("")
+    const [gender, setGender] = useState("FEMININE")
+    const [role, setRole] = useState("PATIENT")
+    const [isActive, setIsActive] = useState(true)
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        setLoading(true)
+        setError(null)
+
+        try {
+            const form = e.currentTarget
+            const formData = new FormData(form)
+
+            const data: RegisterPatientsBody = {
+                firstName: formData.get("firstName") as string,
+                lastName: formData.get("lastName") as string,
+                email: formData.get("email") as string | undefined,
+                password: formData.get("password") as string,
+                phoneNumber: phone,
+                profileImageUrl: formData.get("profileImageUrl") as string | undefined,
+                dateOfBirth: date!,
+                cpf,
+                role: role as any,
+                gender: gender as any,
+                isActive,
+                expertise: "NONE" as any, // ajustar conforme necessidade
+            }
+
+            await registerPatients(data)
+            alert("Paciente cadastrado com sucesso!")
+            form.reset()
+            setCpf("")
+            setPhone("")
+            setCep("")
+            setDate(undefined)
+            setGender("FEMININE")
+            setRole("PATIENT")
+            setIsActive(true)
+        } catch (err: any) {
+            setError(err?.response?.data?.message || "Erro ao cadastrar paciente")
+        } finally {
+            setLoading(false)
+        }
+    }
 
     return (
         <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
@@ -32,17 +78,17 @@ export function RegisterPatients() {
                 <DialogDescription>Preencha os dados para cadastrar um novo paciente</DialogDescription>
             </DialogHeader>
 
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Nome */}
                         <div className="space-y-2">
                             <Label htmlFor="firstName">Primeiro Nome</Label>
-                            <Input id="firstName" placeholder="Ex: Mariana" maxLength={30} />
+                            <Input id="firstName" name="firstName" placeholder="Ex: Mariana" maxLength={30} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="lastName">Último Nome</Label>
-                            <Input id="lastName" placeholder="Ex: Silva" maxLength={50} />
+                            <Input id="lastName" name="lastName" placeholder="Ex: Silva" maxLength={50} />
                         </div>
 
                         {/* CPF */}
@@ -54,6 +100,7 @@ export function RegisterPatients() {
                                 value={cpf}
                                 onChange={(e) => setCpf(formatCPF(e.target.value))}
                                 maxLength={14}
+                                name="cpf"
                             />
                         </div>
 
@@ -84,6 +131,7 @@ export function RegisterPatients() {
                             <Label htmlFor="phoneNumber">Telefone</Label>
                             <Input
                                 id="phoneNumber"
+                                name="phoneNumber"
                                 placeholder="(11) 99999-9999"
                                 value={phone}
                                 onChange={(e) => setPhone(formatPhone(e.target.value))}
@@ -94,7 +142,7 @@ export function RegisterPatients() {
                         {/* Email */}
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" placeholder="exemplo@email.com" />
+                            <Input id="email" name="email" type="email" placeholder="exemplo@email.com" />
                         </div>
 
                         {/* CEP */}
@@ -102,6 +150,7 @@ export function RegisterPatients() {
                             <Label htmlFor="cep">CEP</Label>
                             <Input
                                 id="cep"
+                                name="cep"
                                 placeholder="00000-000"
                                 value={cep}
                                 onChange={(e) => setCep(formatCEP(e.target.value))}
@@ -112,7 +161,7 @@ export function RegisterPatients() {
 
                     <div className="space-y-2">
                         <Label htmlFor="password">Senha</Label>
-                        <Input id="password" type="password" placeholder="Mínimo 6 caracteres" minLength={6} maxLength={30} />
+                        <Input id="password" name="password" type="password" placeholder="Mínimo 6 caracteres" minLength={6} maxLength={30} />
                     </div>
                 </div>
 
@@ -120,7 +169,7 @@ export function RegisterPatients() {
                     {/* Gênero */}
                     <div className="space-y-2">
                         <Label htmlFor="gender">Gênero</Label>
-                        <Select>
+                        <Select value={gender} onValueChange={setGender}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Selecione" />
                             </SelectTrigger>
@@ -135,7 +184,7 @@ export function RegisterPatients() {
                     {/* Perfil */}
                     <div className="space-y-2">
                         <Label htmlFor="role">Perfil</Label>
-                        <Select defaultValue="PATIENT">
+                        <Select value={role} onValueChange={setRole}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Selecione" />
                             </SelectTrigger>
@@ -148,7 +197,7 @@ export function RegisterPatients() {
                     {/* Ativo */}
                     <div className="space-y-2">
                         <Label htmlFor="isActive">Ativo?</Label>
-                        <Select defaultValue="true">
+                        <Select value={isActive ? "true" : "false"} onValueChange={(v) => setIsActive(v === "true")}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Selecione" />
                             </SelectTrigger>
@@ -163,7 +212,7 @@ export function RegisterPatients() {
                 {/* URL da Foto */}
                 <div className="space-y-2">
                     <Label htmlFor="profileImageUrl">URL da Foto</Label>
-                    <Input id="profileImageUrl" placeholder="https://exemplo.com/foto.jpg" />
+                    <Input id="profileImageUrl" name="profileImageUrl" placeholder="https://exemplo.com/foto.jpg" />
                 </div>
 
                 {/* Upload */}
@@ -186,10 +235,12 @@ export function RegisterPatients() {
 
                 {/* Botão Cadastrar */}
                 <div className="pt-2">
-                    <Button type="submit" className="w-full">
-                        Cadastrar paciente
+                    <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? "Cadastrando..." : "Cadastrar paciente"}
                     </Button>
                 </div>
+
+                {error && <p className="text-red-500 mt-2">{error}</p>}
             </form>
         </DialogContent>
     )

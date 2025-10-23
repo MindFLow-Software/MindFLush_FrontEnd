@@ -26,7 +26,6 @@ export function PatientsTableFilters() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        console.log({ cpf, name, status })
     }
 
     return (

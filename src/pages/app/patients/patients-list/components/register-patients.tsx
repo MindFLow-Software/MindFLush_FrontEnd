@@ -47,7 +47,7 @@ export function RegisterPatients() {
     const [date, setDate] = useState<Date | undefined>()
 
     return (
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>Novo Paciente</DialogTitle>
                 <DialogDescription>
@@ -123,8 +123,6 @@ export function RegisterPatients() {
                             placeholder="Mínimo 6 caracteres"
                         />
                     </div>
-
-
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -170,9 +168,6 @@ export function RegisterPatients() {
                         </Select>
                     </div>
                 </div>
-
-
-
 
                 <div className="grid-cols-1 sm:grid-cols-1 gap-4">
                     <Label htmlFor="profileImageUrl">URL da Foto</Label>

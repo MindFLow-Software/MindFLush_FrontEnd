@@ -45,7 +45,7 @@ export function SignIn() {
             localStorage.setItem('token', response.jwt)
             toast.success('Login realizado com sucesso! 👋', { duration: 4000 })
 
-            navigate('/dashboard')
+            navigate('/')
         } catch (error: any) {
             console.error('❌ Erro no login:', error)
 

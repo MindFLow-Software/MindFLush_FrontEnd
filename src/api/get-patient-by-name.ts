@@ -1,21 +1,30 @@
 import { api } from "@/lib/axios"
 
+import type { Expertise, PatientRole } from "@/types/expertise"
+import type { Gender } from "@/types/enum-gender"
+
 export interface Patient {
-    id: string
-    firstName: string
-    lastName: string
-    cpf: string
-    email?: string
-    phoneNumber: string
-    dateOfBirth: string | Date
-    gender: "MASCULINE" | "FEMININE" | "OTHER"
-    isActive?: boolean
-    profileImageUrl?: string
+  id: string
+  firstName: string
+  lastName: string
+  email?: string
+  phoneNumber: string
+  profileImageUrl?: string
+  dateOfBirth: string
+  cpf: string
+  role: PatientRole
+  gender: Gender
+  expertise: Expertise
+  isActive?: boolean
 }
 
-export async function getPatientByCpf(cpf: string): Promise<Patient> {
-    const cleanCpf = cpf.replace(/\D/g, "")
+export interface GetPatientsByNameResponse {
+  patients: Patient[]
+}
 
-    const response = await api.get<{ patient: Patient }>(`/patients/${cleanCpf}`)
-    return response.data.patient
+export async function getPatientsByName(
+  name: string,
+): Promise<GetPatientsByNameResponse> {
+  const response = await api.get<GetPatientsByNameResponse>(`/patients/${name}`)
+  return response.data
 }

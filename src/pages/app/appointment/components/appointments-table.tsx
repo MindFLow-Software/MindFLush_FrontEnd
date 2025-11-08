@@ -15,7 +15,6 @@ export function AppointmentsTable() {
             try {
                 const data = await getAppointments()
 
-                // garante compatibilidade com retorno do backend
                 const list = Array.isArray(data)
                     ? data
                     : (data as any).appointments ?? []
@@ -59,7 +58,6 @@ export function AppointmentsTable() {
                 <TableHeader>
                     <TableRow>
                         <TableHead>Paciente</TableHead>
-                        <TableHead>Psicólogo</TableHead>
                         <TableHead>Diagnóstico</TableHead>
                         <TableHead>Notas</TableHead>
                         <TableHead>Data / Hora</TableHead>

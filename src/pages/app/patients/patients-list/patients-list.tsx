@@ -13,7 +13,7 @@ import {
 import { PatientsTableRow } from "./components/patients-table-row"
 import { PatientsTableFilters } from "./components/patients-table-filters"
 import { Pagination } from "@/components/pagination"
-import { getPatients } from "@/api/table-patients"
+import { getPatients } from "@/api/get-patients"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export function PatientsList() {

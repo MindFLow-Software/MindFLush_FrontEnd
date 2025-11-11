@@ -1,10 +1,10 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts" // 🔑 Importar YAxis
 import { format, subDays } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { useMemo } from "react" // 🔑 Importar useMemo
+import { useMemo } from "react"
 
 import {
     Card,
@@ -31,18 +31,15 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function NewPatientsChart() {
-    // 1. 🔑 ESTABILIZAR DATAS: Usar useMemo para que o cálculo só ocorra na montagem
     const { startDate, endDate } = useMemo(() => {
         const end = new Date();
         const start = subDays(end, 7);
         return { startDate: start, endDate: end };
-    }, []) // Dependência vazia garante que só roda uma vez
+    }, [])
 
     const { data, isLoading, isError } = useQuery({
-        // 2. Usar datas estáveis no queryKey
         queryKey: ["new-patients", startDate.toISOString(), endDate.toISOString()],
         queryFn: () => getAmountPatientsChart({ startDate, endDate }),
-        // 3. Adicionar retry baixo para evitar loop infinito em falhas de autenticação (401/403)
         retry: 1, 
     })
 
@@ -61,6 +58,9 @@ export function NewPatientsChart() {
             </Card>
         )
     }
+    
+    const maxPatients = Math.max(...data.map(item => item.newPatients), 0); 
+    const yAxisDomainMax = Math.max(10, maxPatients + Math.ceil(maxPatients * 0.2)); 
 
     return (
         <Card className={cn("col-span-6 py-4 sm:py-0")}>
@@ -89,6 +89,14 @@ export function NewPatientsChart() {
                         }}
                     >
                         <CartesianGrid vertical={false} />
+                        
+                        <YAxis 
+                            domain={[0, yAxisDomainMax]}
+                            tickLine={false}
+                            axisLine={false}
+                            hide={true}
+                        />
+
                         <XAxis
                             dataKey="date"
                             tickLine={false}

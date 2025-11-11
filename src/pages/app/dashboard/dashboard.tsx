@@ -9,7 +9,7 @@ import { SessionsChart } from "./sessions-chart"
 import { PatientsByAgeChart } from "./patients-by-age-chart"
 import { PatientsByGenderChart } from "./patients-by-gender-chart"
 import { DateRangePicker } from "./date-range-picker"
-import { NewPatientsChart } from "./new-patients-chart"
+import { NewPatientsChart } from "./patients-amount-chart"
 
 export function Dashboard() {
   return (

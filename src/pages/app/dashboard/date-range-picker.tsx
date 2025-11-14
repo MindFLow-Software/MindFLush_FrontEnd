@@ -13,20 +13,24 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
+import { type DateRange } from "react-day-picker"
 
 interface DateRangePickerProps {
-    onChange?: (range: { from: Date; to?: Date }) => void
+    onChange?: (range: { from: Date; to: Date }) => void
 }
 
 export function DateRangePicker({ onChange }: DateRangePickerProps) {
-    const [date, setDate] = React.useState<{ from: Date; to?: Date }>({
+    const [date, setDate] = React.useState<DateRange | undefined>({
         from: addDays(new Date(), -30),
         to: new Date(),
     })
 
-    function handleSelect(newDate: any) {
+    function handleSelect(newDate: DateRange | undefined) {
         setDate(newDate)
-        if (onChange) onChange(newDate)
+        
+        if (onChange && newDate?.from && newDate.to) {
+            onChange({ from: newDate.from, to: newDate.to })
+        }
     }
 
     return (
@@ -59,7 +63,7 @@ export function DateRangePicker({ onChange }: DateRangePickerProps) {
                 <Calendar
                     initialFocus
                     mode="range"
-                    defaultMonth={date.from}
+                    defaultMonth={date?.from}
                     selected={date}
                     onSelect={handleSelect}
                     numberOfMonths={2}

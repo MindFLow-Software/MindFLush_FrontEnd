@@ -1,15 +1,21 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { BarChart } from "lucide-react"
+import { BarChart, Loader2 } from "lucide-react"
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
 import colors from "tailwindcss/colors"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/axios"
 
 interface AgeStats {
     ageRange: string
     patients: number
+}
+
+// 🔑 Função de API para buscar os dados filtrados
+async function getPatientsByAgeStats(params: { startDate?: string; endDate?: string }): Promise<AgeStats[]> {
+    const response = await api.get<AgeStats[]>("/patients/stats/age", { params })
+    return response.data
 }
 
 const COLORS = [
@@ -37,28 +43,35 @@ function CustomTooltip({ active, payload, total }: any) {
     return null
 }
 
-export function PatientsByAgeChart() {
-    const [data, setData] = useState<AgeStats[]>([])
-    const [loading, setLoading] = useState(true)
+interface PatientsByAgeChartProps {
+    startDate: Date | undefined
+    endDate: Date | undefined
+}
 
-    useEffect(() => {
-        async function fetchAgeStats() {
-            try {
-                const response = await api.get<AgeStats[]>("/patients/stats/age")
-                setData(response.data)
-            } catch (error) {
-                console.error("Erro ao buscar estatísticas de idade:", error)
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchAgeStats()
-    }, [])
+export function PatientsByAgeChart({ startDate, endDate }: PatientsByAgeChartProps) {
+    
+    const startIso = startDate?.toISOString()
+    const endIso = endDate?.toISOString()
 
-    if (loading) {
+    const { data, isLoading, isError } = useQuery<AgeStats[], Error, AgeStats[], (string | undefined)[]>({
+        queryKey: ['dashboard', 'age-stats', startIso, endIso],
+        queryFn: () => getPatientsByAgeStats({ startDate: startIso, endDate: endIso }),
+        enabled: true, 
+        staleTime: 1000 * 60 * 5,
+    })
+
+    if (isLoading || !data) {
         return (
             <Card className="col-span-2 flex items-center justify-center h-[300px]">
-                <p className="text-sm text-muted-foreground">Carregando dados...</p>
+                <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            </Card>
+        )
+    }
+
+    if (isError) {
+        return (
+            <Card className="col-span-2 flex items-center justify-center h-[300px]">
+                <p className="text-sm text-red-500">Erro ao carregar dados.</p>
             </Card>
         )
     }

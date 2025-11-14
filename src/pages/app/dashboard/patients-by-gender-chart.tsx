@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
 import { BarChart } from "lucide-react"
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
 import colors from "tailwindcss/colors"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
 import { getPatientsByGender, type PatientsByGenderResponse } from "@/api/get-patients-by-gender"
 
 const GENDER_TRANSLATIONS: Record<string, string> = {
@@ -13,7 +14,6 @@ const GENDER_TRANSLATIONS: Record<string, string> = {
     OTHER: "Outros",
 }
 
-// Função pra definir cores personalizadas conforme o gênero
 const getColorByGender = (gender: string) => {
     switch (gender) {
         case "Feminino":
@@ -42,46 +42,42 @@ function CustomTooltip({ active, payload, total }: any) {
     return null
 }
 
-export function PatientsByGenderChart() {
-    const [data, setData] = useState<PatientsByGenderResponse[]>([])
-    const [loading, setLoading] = useState(true)
+interface PatientsByGenderChartProps {
+    startDate: Date | undefined
+    endDate: Date | undefined
+}
 
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                const response = await getPatientsByGender()
-                const translated = response.map(item => ({
-                    ...item,
-                    gender: GENDER_TRANSLATIONS[item.gender] || item.gender,
-                }))
-                setData(translated)
-            } catch (error) {
-                console.error("Erro ao buscar dados de pacientes por gênero:", error)
-            } finally {
-                setLoading(false)
-            }
-        }
+export function PatientsByGenderChart({ startDate, endDate }: PatientsByGenderChartProps) {
+    
+    const startIso = startDate?.toISOString()
+    const endIso = endDate?.toISOString()
+    
+    const { data: rawData, isLoading, isError } = useQuery<PatientsByGenderResponse[], Error, PatientsByGenderResponse[], (string | undefined)[]>({
+        queryKey: ['dashboard', 'gender-stats', startIso, endIso],
+        queryFn: () => getPatientsByGender({ startDate: startIso, endDate: endIso }),
+        enabled: true, 
+        staleTime: 1000 * 60 * 5,
+    })
 
-        fetchData()
-    }, [])
+    const data = useMemo(() => {
+        if (!rawData) return []
+        return rawData.map(item => ({
+            ...item,
+            gender: GENDER_TRANSLATIONS[item.gender] || item.gender,
+        }))
+    }, [rawData])
 
     const totalPatients = useMemo(
         () => data.reduce((sum, item) => sum + item.patients, 0),
         [data]
     )
 
-    if (loading) {
+    if (isLoading || !data || data.length === 0) {
         return (
             <Card className="col-span-2 flex items-center justify-center h-[300px]">
-                <p className="text-sm text-muted-foreground">Carregando gráfico...</p>
-            </Card>
-        )
-    }
-
-    if (!data.length) {
-        return (
-            <Card className="col-span-2 flex items-center justify-center h-[300px]">
-                <p className="text-sm text-muted-foreground">Nenhum dado disponível</p>
+                <p className="text-sm text-muted-foreground">
+                    {isError ? 'Erro ao carregar dados' : 'Carregando gráfico...'}
+                </p>
             </Card>
         )
     }

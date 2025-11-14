@@ -32,15 +32,26 @@ const chartConfig = {
     },
 } satisfies ChartConfig
 
-export function NewPatientsBarChart() {
+// 🔑 Interface para receber os props de data do Dashboard
+interface NewPatientsBarChartProps {
+    startDate: Date | undefined
+    endDate: Date | undefined
+}
+
+export function NewPatientsBarChart({ startDate: propStartDate, endDate: propEndDate }: NewPatientsBarChartProps) {
+    
     const { startDate, endDate } = useMemo(() => {
-        const end = new Date()
-        const start = subDays(end, 7)
+        const end = propEndDate || new Date()
+        const start = propStartDate || subDays(end, 7) 
         return { startDate: start, endDate: end }
-    }, [])
+    }, [propStartDate, propEndDate])
+
+    const startIso = startDate.toISOString()
+    const endIso = endDate.toISOString()
+
 
     const { data, isLoading, isError } = useQuery({
-        queryKey: ["new-patients-bar", startDate.toISOString(), endDate.toISOString()],
+        queryKey: ["new-patients-bar", startIso, endIso],
         queryFn: () => getAmountPatientsChart({ startDate, endDate }),
         retry: 1,
     })

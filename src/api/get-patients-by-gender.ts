@@ -5,7 +5,7 @@ export interface PatientsByGenderResponse {
     patients: number
 }
 
-export async function getPatientsByGender(): Promise<PatientsByGenderResponse[]> {
+export async function getPatientsByGender(p0: { startDate: string | undefined; endDate: string | undefined }): Promise<PatientsByGenderResponse[]> {
     const response = await api.get<PatientsByGenderResponse[]>("/patients/stats/gender")
     return response.data
 }

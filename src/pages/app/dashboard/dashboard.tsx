@@ -1,7 +1,7 @@
 "use client"
 
 import { Helmet } from "react-helmet-async"
-import { MonthRevenueCard } from "./month-revenue-card"
+import { PatientsCountCard } from "./patients-by-day-card"
 import { MonthPatientsAmountCard } from "./month-patients-amount-card"
 import { PatientsAmountCard } from "./patients-amount-card"
 import { DaySessionsAmountCard } from "./day-sessions-amount-card"
@@ -45,7 +45,7 @@ export function Dashboard() {
                 />
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <MonthRevenueCard />
+                    <PatientsCountCard startDate={startDate} endDate={endDate} />
                     <PatientsAmountCard />
                     <MonthPatientsAmountCard />
                     <DaySessionsAmountCard />

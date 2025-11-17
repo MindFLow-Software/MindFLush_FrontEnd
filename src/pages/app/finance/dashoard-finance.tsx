@@ -20,11 +20,10 @@ const getInitialRange = (): DateRange => {
 }
 
 export function DashboardFinance() {
-    const [dateRange, setDateRange] = useState<DateRange>(getInitialRange)
+    const [ ] = useState<DateRange>(getInitialRange)
 
     const handleRangeChange = (range: DateRange) => {
         if (range.from && range.to) {
-            setDateRange(range)
         }
     }
 

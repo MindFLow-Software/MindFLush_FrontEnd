@@ -62,10 +62,10 @@ const navMain = [
         url: "#",
         icon: Wallet,
         items: [
-            { title: "Pagamentos", url: "#" },
-            { title: "Planos e Assinaturas", url: "#" },
-            { title: "Saques", url: "#" },
+            { title: "Pagamentos", url: "/dashboard-finance" },
             { title: "Cobrança", url: "#" },
+            { title: "Cupons", url: "#" },
+            { title: "Saques", url: "#" },
         ],
     },
 ]

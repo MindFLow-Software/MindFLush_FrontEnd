@@ -42,8 +42,9 @@ const navMain = [
         url: "#",
         icon: Users2,
         items: [
-            { title: "Listagem de Pacientes", url: "/patients-list" },
-            { title: "Criar Agendamento", url: "/appointment" },
+            { title: "Cadastro de Pacientes", url: "/patients-list" },
+            { title: "Documentos de Pacientes", url: "/patients-list" },
+
         ],
     },
     {
@@ -51,7 +52,7 @@ const navMain = [
         url: "#",
         icon: CalendarCheck,
         items: [
-            { title: "Meus Agendamentos", url: "/" },
+            { title: "Meus Agendamentos", url: "/appointment" },
             { title: "Sala de Atendimento", url: "/video-room" },
             { title: "Histórico de Sessões", url: "/sessions/history" },
         ],
@@ -80,7 +81,7 @@ const projects = [
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    
+
     // 1. 🔍 Fetch do perfil logado
     const { data: profile, isLoading } = useQuery<GetProfileResponse | null>({
         queryKey: ["psychologist-profile"],
@@ -104,7 +105,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         // Mapeia os dados reais do psicólogo
         return [
             {
-                name: "Clínica MindFlow", 
+                name: "Clínica MindFlow",
                 firstName: profile.firstName,
                 lastName: profile.lastName,
                 logo: GalleryVerticalEnd,

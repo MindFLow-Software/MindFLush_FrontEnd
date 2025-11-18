@@ -1,53 +1,111 @@
+import { useMemo, useState, useEffect } from 'react'
 import { Goal } from 'lucide-react'
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
+interface MonthSessionData {
+    total: number
+}
+
+// Simulação da API (substitua pela sua)
+const fetchMonthSessionsTotal = async (): Promise<MonthSessionData> => {
+    try {
+        await new Promise(resolve => setTimeout(resolve, 1200))
+        return { total: 58 }
+    } catch (error) {
+        console.error('Erro ao buscar total de sessões do mês:', error)
+        throw error
+    }
+}
+
 export function MonthPatientsAmountCard() {
+    const [state, setState] = useState({
+        total: null as number | null,
+        isLoading: true,
+        isError: false
+    })
+
+    useEffect(() => {
+        fetchMonthSessionsTotal()
+            .then(data =>
+                setState({ total: data.total, isLoading: false, isError: false })
+            )
+            .catch(() =>
+                setState(prev => ({ ...prev, isLoading: false, isError: true }))
+            )
+    }, [])
+
+    const { displayValue, diffSign, formattedDiff, diffColorClass } = useMemo(() => {
+        if (state.total === null) {
+            return {
+                displayValue: '—',
+                diffSign: '',
+                formattedDiff: 0,
+                diffColorClass: 'text-emerald-500 dark:text-emerald-400'
+            }
+        }
+
+        const displayValue = state.total
+        const diff = 0.12 // mock de diferença percentual
+        const formattedDiff = diff * 100
+        const diffSign = formattedDiff >= 0 ? '+' : ''
+        const diffColorClass =
+            formattedDiff >= 0
+                ? 'text-emerald-500 dark:text-emerald-400'
+                : 'text-red-500 dark:text-red-400'
+
+        return { displayValue, diffSign, formattedDiff, diffColorClass }
+    }, [state.total])
+
     return (
-        <Card className={cn(
-            "relative overflow-hidden",
-            "rounded-2xl",
-            "border border-border border-b-4",
-            "shadow-sm shadow-black/8",
-        )}>
+        <Card
+            className={cn(
+                "relative overflow-hidden rounded-1l border border-border/60 border-b-[3px] border-b-purple-700 dark:border-b-purple-500",
+                "shadow-md shadow-black/20 dark:shadow-black/8 bg-card transition-all p-4"
+            )}
+        >
             <div
                 className={cn(
-                    "absolute -top-16 -right-16",
-                    "w-48 h-48",
-                    "rounded-full",
-                    "bg-linear-to-br from-purple-400/70 to-purple-800/70",
-                    "blur-3xl opacity-60",
-                    "pointer-events-none"
+                    "absolute -top-14 -right-14 w-40 h-40 rounded-full",
+                    "bg-gradient-to-r from-purple-300/50 to-purple-700/30 dark:from-purple-400/70 dark:to-purple-900",
+                    "blur-3xl opacity-60 pointer-events-none"
                 )}
             />
 
-            <div className="relative z-1 p-3 flex flex-col">
-                <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                        <div className="rounded-full bg-purple-100 dark:bg-purple-950/40 p-2.5">
-                            <Goal className="size-6 text-purple-600 dark:text-purple-400" />
-                        </div>
-                    </div>
+            <div className="relative z-10 flex flex-col gap-4">
+                <div className="rounded-full bg-purple-100/80 dark:bg-purple-950/40 p-2 w-fit">
+                    <Goal className="size-5 text-purple-600 dark:text-purple-400" />
                 </div>
 
-                <div className="flex flex-col gap-1">
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-bold tracking-tight">
-                            58
+                {state.isLoading ? (
+                    <div className="space-y-2">
+                        <div className="h-6 w-20 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                        <div className="h-3 w-40 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                    </div>
+                ) : state.isError ? (
+                    <div className="flex flex-col gap-1">
+                        <span className="text-sm font-medium text-red-500">Erro ao carregar</span>
+                        <span className="text-xs text-muted-foreground">Tente novamente</span>
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-1.5">
+                        <span className="text-2xl font-semibold tracking-tight leading-none">
+                            {displayValue.toLocaleString("pt-BR")}
                         </span>
-                    </div>
-                    <div>
-                        <p className="text-sm text-muted-foreground font-medium">
-                            Sessões Realizadas (Mês)
+
+                        <p className="text-[13px] text-muted-foreground font-medium leading-none">
+                            Sessões realizadas no mês
                         </p>
+
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                            <span className="font-semibold text-emerald-500 dark:text-emerald-400">
-                                +12%
-                            </span>
-                            {' em relação ao mês anterior'}
+                            <span className={cn("font-semibold", diffColorClass)}>
+                                {diffSign}
+                                {formattedDiff.toFixed(1)}%
+                            </span>{" "}
+                            em relação ao mês anterior
                         </p>
                     </div>
-                </div>
+                )}
             </div>
         </Card>
     )

@@ -11,12 +11,21 @@ interface PatientsCountCardProps {
     endDate?: Date
 }
 
-export const PatientsCountCard = ({ startDate: propStartDate, endDate: propEndDate }: PatientsCountCardProps) => {
+export const PatientsCountCard = ({
+    startDate: propStartDate,
+    endDate: propEndDate
+}: PatientsCountCardProps) => {
+
     const endDate = propEndDate || new Date()
     const startDate = propStartDate || subDays(endDate, 30)
 
     const { data: chartData, isLoading, isError } = useQuery({
-        queryKey: ['dashboard', 'patients-count-summary', startDate.toISOString(), endDate.toISOString()],
+        queryKey: [
+            "dashboard",
+            "patients-count-summary",
+            startDate.toISOString(),
+            endDate.toISOString()
+        ],
         queryFn: () => getAmountPatientsChart({ startDate, endDate }),
     })
 
@@ -24,61 +33,60 @@ export const PatientsCountCard = ({ startDate: propStartDate, endDate: propEndDa
         if (!chartData?.length) {
             return {
                 totalPatients: 0,
-                diffValue: 0,
                 formattedDiff: 0,
-                diffSign: '',
-                diffColorClass: 'text-emerald-500 dark:text-emerald-400'
+                diffSign: "",
+                diffColorClass: "text-emerald-500 dark:text-emerald-400"
             }
         }
 
         const total = chartData.reduce((sum, item) => sum + item.newPatients, 0)
-        const diff = 0.05
+
+        const diff = 0.05 // mock
         const formatted = diff * 100
-        const sign = formatted >= 0 ? '+' : ''
-        const colorClass = formatted >= 0
-            ? 'text-emerald-500 dark:text-emerald-400'
-            : 'text-red-500 dark:text-red-400'
+        const sign = formatted >= 0 ? "+" : ""
+        const colorClass =
+            formatted >= 0
+                ? "text-emerald-500 dark:text-emerald-400"
+                : "text-red-500 dark:text-red-400"
 
         return {
             totalPatients: total,
-            diffValue: diff,
             formattedDiff: formatted,
             diffSign: sign,
-            diffColorClass: colorClass
+            diffColorClass: colorClass,
         }
     }, [chartData])
 
     return (
-        <Card className={cn(
-            "relative overflow-hidden",
-            "rounded-2xl",
-            "border border-border border-b-[3px]",
-            "shadow-sm shadow-black/8",
-        )}>
+        <Card
+            className={cn(
+                "relative overflow-hidden",
+                "rounded-2xl",
+                "border border-border/60 border-b-[3px] border-b-green-700 dark:border-b-green-500",
+                "shadow-md shadow-black/20 dark:shadow-black/8", 
+                "bg-card transition-all",
+                "p-4"
+            )}
+        >
             <div
                 className={cn(
-                    "absolute -top-16 -right-16",
-                    "w-48 h-48",
-                    "rounded-full",
-                    "bg-linear-to-br from-emerald-400/70 to-emerald-800/7F0",
-                    "blur-3xl opacity-60",
-                    "pointer-events-none"
+                    "absolute -top-14 -right-14",
+                    "w-40 h-40 rounded-full",
+                    "bg-gradient-to-r from-emerald-400/50 to-emerald-700/30 dark:from-emerald-400/70 dark:to-emerald-900",
+                    "blur-3xl opacity-60 pointer-events-none"
                 )}
             />
 
-            <div className="relative z-1 p-5 flex flex-col">
-                <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                        <div className="rounded-full bg-emerald-100 dark:bg-emerald-950/40 p-2.5">
-                            <TrendingUp className="size-6 text-emerald-600 dark:text-emerald-400" />
-                        </div>
-                    </div>
+            <div className="relative z-10 flex flex-col gap-4">
+
+                <div className="rounded-full bg-emerald-100/80 dark:bg-emerald-950/40 p-2 w-fit"> {/* Fundo do ícone ligeiramente mais opaco */}
+                    <TrendingUp className="size-5 text-emerald-700 dark:text-emerald-400" /> {/* Ícone mais escuro no light */}
                 </div>
 
                 {isLoading ? (
-                    <div className="space-y-1.5">
-                        <div className="h-7 w-20 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse" />
-                        <div className="h-3 w-40 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                    <div className="space-y-2">
+                        <div className="h-6 w-20 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                        <div className="h-3 w-36 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
                     </div>
                 ) : isError ? (
                     <div className="flex flex-col gap-1">
@@ -86,23 +94,22 @@ export const PatientsCountCard = ({ startDate: propStartDate, endDate: propEndDa
                         <span className="text-xs text-muted-foreground">Tente novamente</span>
                     </div>
                 ) : (
-                    <div className="flex flex-col gap-1">
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-bold tracking-tight">
-                                {totalPatients.toLocaleString('pt-BR')}
-                            </span>
-                        </div>
-                        <div>
-                            <p className="text-sm text-muted-foreground font-medium">
-                                Novos Pacientes
-                            </p>
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                                <span className={cn("font-semibold", diffColorClass)}>
-                                    {diffSign}{formattedDiff.toFixed(1)}%
-                                </span>
-                                {' em relação ao período passado'}
-                            </p>
-                        </div>
+                    <div className="flex flex-col gap-1.5">
+                        <span className="text-2xl font-semibold tracking-tight leading-none">
+                            {totalPatients.toLocaleString("pt-BR")}
+                        </span>
+
+                        <p className="text-[13px] text-muted-foreground font-medium leading-none">
+                            Novos pacientes
+                        </p>
+
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            <span className={cn("font-semibold", diffColorClass)}>
+                                {diffSign}
+                                {formattedDiff.toFixed(1)}%
+                            </span>{" "}
+                            em relação ao período anterior
+                        </p>
                     </div>
                 )}
             </div>

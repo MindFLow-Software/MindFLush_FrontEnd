@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 
 import { AppLayout } from './pages/_layouts/app'
 import { AuthLayout } from './pages/_layouts/auth'
-import { PatientsList } from './pages/app/patients/patients-list/patients-list'
+import { PatientsList } from './pages/app/patients/patients-list'
 import { Dashboard } from './pages/app/dashboard/dashboard'
 import { NotFound } from './pages/404'
 import { SignIn } from './pages/auth/sign-in'

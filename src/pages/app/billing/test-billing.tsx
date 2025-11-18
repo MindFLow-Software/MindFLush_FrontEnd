@@ -1,4 +1,4 @@
-import { CreaterBilling } from "@/api/create-billing.ts";
+import { createBilling } from "@/api/create-billing.ts";
 import { useState } from "react";
 
 export function TestBilling() {
@@ -10,11 +10,11 @@ export function TestBilling() {
         setResponse(null);
 
         try {
-            const res = await CreaterBilling({
+            const res = await createBilling({
                 patientEmail: "teste@example.com",
                 patientTaxId: "12345678901",
                 patientName: "Paciente Teste",
-                amountInCents: 15000, // R$150,00
+                amountInCents: 15000, // R$ 150
                 consultationDetails: "Sessão de 50 minutos",
                 frequency: "ONE_TIME",
                 methods: ["PIX"],
@@ -23,9 +23,13 @@ export function TestBilling() {
             });
 
             setResponse(res);
-        } catch (e) {
-            console.error(e);
-            alert("Erro ao criar cobrança");
+        } catch (error: any) {
+            console.error("Erro no teste:", error);
+
+            alert(
+                error?.response?.data?.message ??
+                "Erro ao criar cobrança"
+            );
         }
 
         setLoading(false);

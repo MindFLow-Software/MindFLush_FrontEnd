@@ -6,6 +6,9 @@ import { useMemo } from "react"
 import { getAmountPatientsChart } from "@/api/get-amount-patients-chart"
 import { cn } from "@/lib/utils"
 
+// NOTE: Se você estiver usando um framework como Next.js, 
+// é altamente recomendado importar a imagem no topo e usar o componente Image.
+
 interface PatientsCountCardProps {
     startDate?: Date
     endDate?: Date
@@ -63,11 +66,12 @@ export const PatientsCountCard = ({
                 "relative overflow-hidden",
                 "rounded-2xl",
                 "border border-border/60 border-b-[3px] border-b-green-700 dark:border-b-green-500",
-                "shadow-md shadow-black/20 dark:shadow-black/8", 
+                "shadow-md shadow-black/20 dark:shadow-black/8",
                 "bg-card transition-all",
                 "p-4"
             )}
         >
+            {/* 1. SEU GRADIENTE ABSOLUTO (MANTIDO) */}
             <div
                 className={cn(
                     "absolute -top-14 -right-14",
@@ -77,10 +81,22 @@ export const PatientsCountCard = ({
                 )}
             />
 
+            <img
+                src={'/brain.png'}
+                alt="Ícone de Cérebro/Ideia"
+                className={cn(
+                    "absolute bottom-0 right-0", // Posição
+                    "w-3xl h-auto max-w-[200px]", // Tamanho
+                    "opacity-70", // <-- Novo: Valor único para Light e Dark
+                    "pointer-events-none",        // Garante que não interfira no clique
+                    "translate-x-1/4 translate-y-1/4" // Move a imagem para fora do Card ligeiramente
+                )}
+            />
+
             <div className="relative z-10 flex flex-col gap-4">
 
-                <div className="rounded-full bg-emerald-100/80 dark:bg-emerald-950/40 p-2 w-fit"> {/* Fundo do ícone ligeiramente mais opaco */}
-                    <TrendingUp className="size-5 text-emerald-700 dark:text-emerald-400" /> {/* Ícone mais escuro no light */}
+                <div className="rounded-full bg-emerald-100/80 dark:bg-emerald-950/40 p-2 w-fit">
+                    <TrendingUp className="size-5 text-emerald-700 dark:text-emerald-400" />
                 </div>
 
                 {isLoading ? (

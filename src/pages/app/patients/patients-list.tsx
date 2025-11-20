@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Helmet } from "react-helmet-async"
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "react-router-dom"
@@ -9,17 +10,47 @@ import { PatientsTableFilters } from "./components/patients-table-filters"
 import { PatientsTable } from "./components/patients-table-row"
 import { getPatients, type GetPatientsResponse } from "@/api/get-patients"
 
+const DESKTOP_BREAKPOINT = 1024 // Ponto de corte para tela grande (ex: lg)
+
 export function PatientsList() {
     const [searchParams, setSearchParams] = useSearchParams()
 
+    // 1. Estado para quantidade de itens por página
+    const [itemsPerPage, setItemsPerPage] = useState(10) 
+
+    // 2. Efeito para detectar o tamanho da tela
+    useEffect(() => {
+        const checkScreenSize = () => {
+            const newPerPage = window.innerWidth >= DESKTOP_BREAKPOINT ? 15 : 10;
+            
+            if (newPerPage !== itemsPerPage) {
+                setItemsPerPage(newPerPage);
+                
+                // Opcional: Resetar a página para 0 ao mudar o perPage
+                setSearchParams(state => {
+                    state.set('pageIndex', '0');
+                    return state;
+                }, { replace: true });
+            }
+        };
+
+        window.addEventListener('resize', checkScreenSize);
+        checkScreenSize();
+
+        return () => window.removeEventListener('resize', checkScreenSize);
+    }, [itemsPerPage, setSearchParams]);
+
     const pageIndex = Number(searchParams.get('pageIndex') ?? 0)
-    const perPage = Number(searchParams.get('perPage') ?? 10)
+    const perPage = itemsPerPage; 
+    
+    // Leitura dos filtros
     const name = searchParams.get('name')
     const cpf = searchParams.get('cpf')
     const status = searchParams.get('status')
 
     const { data: result, isLoading, isError } = useQuery<GetPatientsResponse>({
-        queryKey: ["patients", pageIndex, name, cpf, status],
+        // Inclui perPage na queryKey para forçar re-fetch quando o tamanho da tela muda
+        queryKey: ["patients", pageIndex, perPage, name, cpf, status],
         queryFn: () => getPatients({
             pageIndex,
             perPage,
@@ -31,7 +62,8 @@ export function PatientsList() {
     })
 
     const patients = result?.patients ?? []
-    const meta = result?.meta ?? { pageIndex: 0, perPage: 10, totalCount: 0 }
+    // Usamos o perPage atualizado no meta fallback
+    const meta = result?.meta ?? { pageIndex: 0, perPage: perPage, totalCount: 0 } 
 
     const handlePaginate = (newPageIndex: number) => {
         setSearchParams((state) => {
@@ -60,7 +92,7 @@ export function PatientsList() {
                     <PatientsTable
                         patients={patients}
                         isLoading={isLoading}
-                        perPage={perPage}
+                        perPage={perPage} // ✅ Passa o perPage atualizado para a tabela
                     />
 
                     {result && (

@@ -18,8 +18,15 @@ export interface RegisterPatientsBody {
 }
 
 export async function registerPatients(data: RegisterPatientsBody) {
+    
+    const rawCpf = data.cpf.replace(/\D/g, '') 
+    const rawPhoneNumber = data.phoneNumber.replace(/\D/g, '')
+
     const formattedData = {
         ...data,
+        cpf: rawCpf, 
+        phoneNumber: rawPhoneNumber, 
+        
         dateOfBirth:
             data.dateOfBirth instanceof Date
                 ? data.dateOfBirth.toISOString()

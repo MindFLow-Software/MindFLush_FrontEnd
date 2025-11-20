@@ -1,58 +1,78 @@
 import { api } from "@/lib/axios"
+import { formatCPF } from "@/utils/formatCPF"
 
-export interface Patient {
-  id: string
-  firstName: string
-  lastName: string
-  email?: string
-  cpf: string
-  phoneNumber: string
-  profileImageUrl?: string
-  dateOfBirth: string
-  gender: "MASCULINE" | "FEMININE" | "OTHER"
-  status?: string
+// Função formatPhone que você forneceu
+export function formatPhone(raw: string): string {
+  if (!raw) return raw
+  const cleaned = String(raw).replace(/\D/g, '')
+
+  // formato esperado: 11 dígitos (2 DDD + 9 número)
+  if (/^(\d{2})(\d{5})(\d{4})$/.test(cleaned)) {
+    return cleaned.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3')
+  }
+
+  // tenta formatar 10 dígitos (caso número com 8 dígitos sem nono)
+  if (/^(\d{2})(\d{4})(\d{4})$/.test(cleaned)) {
+    return cleaned.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3')
+  }
+
+  // se não bater, retorna só os números (fallback)
+  return cleaned
 }
 
-export interface GetPatientsRequest {
-  pageIndex?: number | null
-  perPage?: number | null
-  name?: string | null
-  cpf?: string | null
-  status?: string | null // 1. Adicionado Status
+export interface Patient {
+    id: string
+    firstName: string
+    lastName: string
+    email?: string
+    cpf: string
+    phoneNumber: string // ⬅️ Aplicaremos a formatação aqui
+    profileImageUrl?: string
+    dateOfBirth: string
+    gender: "MASCULINE" | "FEMININE" | "OTHER"
+    status?: string
+}
+
+export interface GetPatientsQuery { 
+    pageIndex?: number
+    perPage?: number
+    name?: string | null
+    cpf?: string | null 
+    status?: string | null
 }
 
 export interface GetPatientsResponse {
-  patients: Patient[]
-  meta: {
-    pageIndex: number
-    perPage: number
-    totalCount: number
-  }
+    patients: Patient[]
+    meta: {
+        pageIndex: number
+        perPage: number
+        totalCount: number
+    }
 }
 
-export async function getPatients({
-  pageIndex,
-  perPage,
-  name,
-  cpf,
-  status, // Recebe o status
-}: GetPatientsRequest): Promise<GetPatientsResponse> {
-  
-  const response = await api.get<GetPatientsResponse>('/patients', {
-    params: {
-      // 2. Correção de Índice (IMPORTANTE): 
-      // Se seu backend espera 'page' (1, 2, 3), use a linha abaixo:
-      // page: (pageIndex ?? 0) + 1, 
-      
-      // Se seu backend foi feito para aceitar 'pageIndex' (0, 1, 2), mantenha assim:
-      pageIndex: pageIndex ?? 0,
+export async function getPatients(query: GetPatientsQuery): Promise<GetPatientsResponse> {
+    const { pageIndex, perPage, name, cpf, status } = query 
+    
+    const response = await api.get<GetPatientsResponse>('/patients', {
+        params: {
+            pageIndex: pageIndex ?? 0,
+            perPage: perPage ?? 10,
+            name, 
+            cpf,
+            status: status === "all" ? null : status,
+        },
+    })
 
-      perPage: perPage ?? 10, // 3. Padronizado para 10 (igual ao frontend)
-      name,
-      cpf,
-      status: status === "all" ? null : status, // Envia status (ou null se for 'all')
-    },
-  })
+    const rawData = response.data
 
-  return response.data
+    const formattedPatients = rawData.patients.map(patient => ({
+        ...patient,
+        cpf: formatCPF(patient.cpf),
+        phoneNumber: formatPhone(patient.phoneNumber), 
+    }))
+
+    return {
+        ...rawData,
+        patients: formattedPatients,
+    }
 }

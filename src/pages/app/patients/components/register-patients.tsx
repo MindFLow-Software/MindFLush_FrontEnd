@@ -6,6 +6,8 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { ChevronDownIcon, CloudDownload } from "lucide-react"
 import { toast } from "sonner"
+// ⚠️ Importar cn se estiver usando
+// import { cn } from "@/lib/utils" 
 
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -26,11 +28,23 @@ import {
 
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia, EmptyContent } from "@/components/ui/empty"
 
-import { formatCEP } from "@/utils/formatCEP"
 import { formatCPF } from "@/utils/formatCPF"
 import { formatPhone } from "@/utils/formatPhone"
 
 import { registerPatients, type RegisterPatientsBody } from "@/api/create-patients"
+
+interface FormErrors {
+    firstName?: boolean
+    lastName?: boolean
+    email?: boolean
+    password?: boolean
+    dateOfBirth?: boolean
+    cpf?: boolean
+    phoneNumber?: boolean
+}
+
+const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
+
 
 export function RegisterPatients() {
     const queryClient = useQueryClient()
@@ -38,10 +52,11 @@ export function RegisterPatients() {
     const [date, setDate] = useState<Date | undefined>()
     const [cpf, setCpf] = useState("")
     const [phone, setPhone] = useState("")
-    const [cep, setCep] = useState("")
     const [gender, setGender] = useState("FEMININE")
     const [role, setRole] = useState("PATIENT")
     const [isActive, setIsActive] = useState(true)
+
+    const [errors, setErrors] = useState<FormErrors>({})
 
     const { mutateAsync: registerPatientFn, isPending } = useMutation({
         mutationFn: registerPatients,
@@ -68,19 +83,46 @@ export function RegisterPatients() {
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
+        setErrors({}) // Limpa erros anteriores no início
 
         const form = e.currentTarget
         const fd = new FormData(form)
 
+        const rawCpf = cpf.replace(/\D/g, "")
+        const rawPhone = phone.replace(/\D/g, "")
+
+        const firstName = fd.get("firstName") as string
+        const lastName = fd.get("lastName") as string
+        const email = fd.get("email") as string
+        const password = fd.get("password") as string
+
+        const newErrors: FormErrors = {}
+
+        // --- Lógica de Validação ---
+        if (!firstName) newErrors.firstName = true
+        if (!lastName) newErrors.lastName = true
+        if (!email) newErrors.email = true
+        if (password.length < 6) newErrors.password = true
+        if (!date) newErrors.dateOfBirth = true
+        if (rawCpf.length < 11) newErrors.cpf = true
+        if (rawPhone.length < 10) newErrors.phoneNumber = true
+
+        // Se houver erros, atualiza o estado e para
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors)
+            toast.error("Preencha corretamente os campos destacados.")
+            return
+        }
+
         const data: RegisterPatientsBody = {
-            firstName: fd.get("firstName") as string,
-            lastName: fd.get("lastName") as string,
-            email: (fd.get("email") as string) || undefined,
-            password: fd.get("password") as string,
-            phoneNumber: phone,
+            firstName,
+            lastName,
+            email: email || undefined,
+            password,
+            phoneNumber: rawPhone,
             profileImageUrl: (fd.get("profileImageUrl") as string) || undefined,
             dateOfBirth: date!,
-            cpf,
+            cpf: rawCpf,
             role: role as any,
             gender: gender as any,
             isActive,
@@ -92,7 +134,6 @@ export function RegisterPatients() {
         form.reset()
         setCpf("")
         setPhone("")
-        setCep("")
         setDate(undefined)
         setGender("FEMININE")
         setRole("PATIENT")
@@ -116,17 +157,29 @@ export function RegisterPatients() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                                 <Field>
-                                    <FieldLabel htmlFor="firstName">Primeiro Nome</FieldLabel>
-                                    <Input id="firstName" name="firstName" maxLength={30} placeholder="Ex: Mariana" />
+                                    <FieldLabel htmlFor="firstName">Primeiro Nome*</FieldLabel>
+                                    <Input
+                                        id="firstName"
+                                        name="firstName"
+                                        maxLength={30}
+                                        placeholder="Ex: Mariana"
+                                        className={cn(errors.firstName && "border-red-500 ring-red-500")}
+                                    />
                                 </Field>
 
                                 <Field>
-                                    <FieldLabel htmlFor="lastName">Último Nome</FieldLabel>
-                                    <Input id="lastName" name="lastName" maxLength={50} placeholder="Ex: Silva" />
+                                    <FieldLabel htmlFor="lastName">Último Nome*</FieldLabel>
+                                    <Input
+                                        id="lastName"
+                                        name="lastName"
+                                        maxLength={50}
+                                        placeholder="Ex: Silva"
+                                        className={cn(errors.lastName && "border-red-500 ring-red-500")}
+                                    />
                                 </Field>
 
                                 <Field>
-                                    <FieldLabel htmlFor="cpf">CPF</FieldLabel>
+                                    <FieldLabel htmlFor="cpf">CPF*</FieldLabel>
                                     <Input
                                         id="cpf"
                                         name="cpf"
@@ -134,14 +187,21 @@ export function RegisterPatients() {
                                         maxLength={14}
                                         value={cpf}
                                         onChange={(e) => setCpf(formatCPF(e.target.value))}
+                                        className={cn(errors.cpf && "border-red-500 ring-red-500")}
                                     />
                                 </Field>
 
                                 <Field>
-                                    <FieldLabel>Data de Nascimento</FieldLabel>
+                                    <FieldLabel>Data de Nascimento*</FieldLabel>
                                     <Popover>
                                         <PopoverTrigger asChild>
-                                            <Button variant="outline" className="w-full justify-between bg-transparent font-normal">
+                                            <Button
+                                                variant="outline"
+                                                className={cn(
+                                                    "w-full justify-between bg-transparent font-normal",
+                                                    errors.dateOfBirth && "border-red-500 text-red-500 hover:text-red-500 hover:border-red-500" // 🔴 Borda vermelha para o botão Popover
+                                                )}
+                                            >
                                                 {date ? format(date, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data"}
                                                 <ChevronDownIcon className="ml-2 h-4 w-4 opacity-50" />
                                             </Button>
@@ -162,7 +222,7 @@ export function RegisterPatients() {
                                 </Field>
 
                                 <Field>
-                                    <FieldLabel htmlFor="phoneNumber">Telefone</FieldLabel>
+                                    <FieldLabel htmlFor="phoneNumber">Telefone*</FieldLabel>
                                     <Input
                                         id="phoneNumber"
                                         name="phoneNumber"
@@ -170,30 +230,25 @@ export function RegisterPatients() {
                                         maxLength={15}
                                         value={phone}
                                         onChange={(e) => setPhone(formatPhone(e.target.value))}
+                                        className={cn(errors.phoneNumber && "border-red-500 ring-red-500")}
                                     />
                                 </Field>
 
                                 <Field>
-                                    <FieldLabel htmlFor="cep">CEP</FieldLabel>
+                                    <FieldLabel htmlFor="email">Email*</FieldLabel>
                                     <Input
-                                        id="cep"
-                                        name="cep"
-                                        placeholder="00000-000"
-                                        maxLength={9}
-                                        value={cep}
-                                        onChange={(e) => setCep(formatCEP(e.target.value))}
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        placeholder="exemplo@email.com"
+                                        className={cn(errors.email && "border-red-500 ring-red-500")}
                                     />
                                 </Field>
 
                             </div>
 
-                             <Field>
-                                    <FieldLabel htmlFor="email">Email</FieldLabel>
-                                    <Input id="email" name="email" type="email" placeholder="exemplo@email.com" />
-                                </Field>
-
                             <Field>
-                                <FieldLabel htmlFor="password">Senha</FieldLabel>
+                                <FieldLabel htmlFor="password">Senha*</FieldLabel>
                                 <Input
                                     id="password"
                                     name="password"
@@ -201,8 +256,10 @@ export function RegisterPatients() {
                                     placeholder="Mínimo 6 caracteres"
                                     minLength={6}
                                     maxLength={30}
+                                    className={cn(errors.password && "border-red-500 ring-red-500")}
                                 />
                             </Field>
+
                         </FieldGroup>
                     </FieldSet>
 

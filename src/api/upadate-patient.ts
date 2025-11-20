@@ -1,6 +1,9 @@
 import { api } from "@/lib/axios"
 import type { Gender } from "@/types/enum-gender"
 
+// Você precisará definir o tipo Role se ele não estiver definido.
+type Role = "PATIENT" | "ADMIN" | "DOCTOR" // Exemplo de definição
+
 export interface UpdatePatientData {
     id: string
     firstName?: string
@@ -13,6 +16,8 @@ export interface UpdatePatientData {
     dateOfBirth?: Date | string
     cpf?: string
     gender?: Gender
+    role?: Role
+    isActive?: boolean 
 }
 
 export async function updatePatient({ id, ...data }: UpdatePatientData) {

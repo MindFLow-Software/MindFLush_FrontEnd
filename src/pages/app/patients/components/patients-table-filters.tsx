@@ -19,6 +19,8 @@ import {
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 import { RegisterPatients } from "./register-patients"
 
+
+// Zod Schema (inalterado)
 const patientsFilterSchema = z.object({
   name: z.string().optional(),
   cpf: z.string().optional(),
@@ -26,6 +28,16 @@ const patientsFilterSchema = z.object({
 })
 
 type PatientsFilterSchema = z.infer<typeof patientsFilterSchema>
+
+// Constantes para os status da Select
+const PATIENT_STATUSES = [
+  { value: 'all', label: 'Todos os status' },
+  { value: 'active', label: 'Em acompanhamento' },
+  { value: 'scheduled', label: 'Sessão agendada' },
+  { value: 'completed', label: 'Sessão concluída' },
+  { value: 'paused', label: 'Em pausa' },
+  { value: 'discharged', label: 'Alta terapêutica' },
+]
 
 export function PatientsTableFilters() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -46,66 +58,76 @@ export function PatientsTableFilters() {
   // Observa as mudanças no formulário
   const filters = watch()
 
+  // Lógica de Debounce e Envio Otimizada
   useEffect(() => {
+    let shouldResetPage = false;
+
     const timeoutId = setTimeout(() => {
       setSearchParams((state) => {
-        // Valores atuais na URL
-        const currentName = state.get("name") ?? ""
-        const currentCpf = state.get("cpf") ?? ""
-        const currentStatus = state.get("status") ?? "all"
 
-        // Novos valores do formulário
-        const newName = filters.name ?? ""
-        const newCpf = filters.cpf ?? ""
-        const newStatus = filters.status ?? "all"
+        // --- 1. TRATAMENTO DO NOME E CPF ---
+        const fieldsToProcess = [
+          { key: 'name', value: filters.name ?? "" },
+          { key: 'cpf', value: filters.cpf ?? "" },
+        ] as const;
 
-        // Verificamos se ALGUM filtro mudou de verdade
-        const hasChanged =
-          currentName !== newName ||
-          currentCpf !== newCpf ||
-          currentStatus !== newStatus
+        for (const { key, value } of fieldsToProcess) {
+          const currentValue = state.get(key) ?? "";
 
-        if (filters.name) {
-          state.set("name", filters.name)
+          const isValid = value.length > 0;
+
+          if (isValid) {
+            if (currentValue !== value) {
+              state.set(key, value);
+              shouldResetPage = true;
+            }
+          } else {
+            if (currentValue !== "") {
+              state.delete(key);
+              shouldResetPage = true;
+            }
+          }
+        }
+
+        // --- 2. TRATAMENTO DO STATUS (Inalterado) ---
+        const newStatus = filters.status ?? "all";
+        const currentStatus = state.get("status") ?? "all";
+
+        if (newStatus !== "all") {
+          if (currentStatus !== newStatus) {
+            state.set("status", newStatus);
+            shouldResetPage = true;
+          }
         } else {
-          state.delete("name")
+          if (currentStatus !== "all") {
+            state.delete("status");
+            shouldResetPage = true;
+          }
         }
 
-        if (filters.cpf) {
-          state.set("cpf", filters.cpf)
-        } else {
-          state.delete("cpf")
+        // --- 3. PAGINAÇÃO ---
+        if (shouldResetPage) {
+          state.set("pageIndex", "0");
         }
 
-        if (filters.status && filters.status !== "all") {
-          state.set("status", filters.status)
-        } else {
-          state.delete("status")
-        }
+        return state;
+      }, { replace: true });
+    }, 500);
 
-        // O PULO DO GATO: Só reseta a página se os filtros mudaram
-        if (hasChanged) {
-          state.set("pageIndex", "0")
-        }
-
-        return state
-      })
-    }, 500)
-
-    return () => clearTimeout(timeoutId)
-  }, [filters, setSearchParams]) // O array de dependências garante que o effect rode
+    return () => clearTimeout(timeoutId);
+  }, [filters, setSearchParams])
 
   return (
     <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
       <form className="flex flex-col lg:flex-row gap-2 flex-1 lg:items-center">
         <Input
-          placeholder="Buscar por CPF..."
+          placeholder="Buscar por CPF"
           className="h-8 w-full lg:w-auto"
           {...register("cpf")}
         />
 
         <Input
-          placeholder="Buscar por Nome..."
+          placeholder="Buscar por Nome"
           className="h-8 w-full lg:w-[320px]"
           {...register("name")}
         />
@@ -122,16 +144,16 @@ export function PatientsTableFilters() {
                 value={value}
                 disabled={disabled}
               >
+                {/* SELECT: Corrigido para h-8 para alinhar com os inputs e o botão size="sm" */}
                 <SelectTrigger className="h-8 w-full lg:w-[180px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="active">Em acompanhamento</SelectItem>
-                  <SelectItem value="scheduled">Sessão agendada</SelectItem>
-                  <SelectItem value="completed">Sessão concluída</SelectItem>
-                  <SelectItem value="paused">Em pausa</SelectItem>
-                  <SelectItem value="discharged">Alta terapêutica</SelectItem>
+                  {PATIENT_STATUSES.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             )

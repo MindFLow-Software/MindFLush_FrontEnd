@@ -69,7 +69,8 @@ function TestimonialCard({ data }: { data: typeof testimonials[0] }) {
 
 export function TestimonialsSection() {
     return (
-        <section className="bg-slate-50 py-24 overflow-hidden">
+        // AQUI: Adicionei o ID "depoimentos" e o "scroll-mt-20"
+        <section id="depoimentos" className="bg-slate-50 py-24 overflow-hidden scroll-mt-20">
 
             {/* Injeção de CSS para a animação (Marquee) */}
             <style>{`
@@ -114,8 +115,9 @@ export function TestimonialsSection() {
             <div className="relative flex w-full flex-col gap-8">
 
                 {/* Efeito de Fade nas laterais (Máscara) */}
-                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-slate-50 to-transparent"></div>
-                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-slate-50 to-transparent"></div>
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-
+                gradient-to-r from-slate-50 to-transparent"></div>
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-linear-to-l from-slate-50 to-transparent"></div>
 
                 {/* LINHA 1 - Move para a Esquerda */}
                 <div className="group flex overflow-hidden">

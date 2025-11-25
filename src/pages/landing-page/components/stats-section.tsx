@@ -7,14 +7,15 @@ import {
 
 export function StatsSection() {
     return (
-        <section className="relative overflow-hidden border-t border-slate-100 bg-white py-24">
+        // 2. Adicione o ID aqui para receber o clique do Header
+        <section id="funcionalidades" className="relative overflow-hidden border-t border-slate-100 bg-white py-24 scroll-mt-20">
 
             <div className="absolute inset-0 z-0 opacity-[0.03]"
                 style={{ backgroundImage: 'radial-gradient(#1d4ed8 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
             </div>
 
             <div className="container relative z-10 mx-auto px-6 md:px-8 lg:px-12">
-
+                {/* O resto do código continua igual... */}
                 <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
 
                     <div className="relative max-w-lg">
@@ -51,7 +52,7 @@ export function StatsSection() {
                         <div>
                             <div className="flex items-center gap-2">
                                 <span className="text-blue-500 font-bold text-3xl">+</span>
-                                <span className="text-5xl font-bold tracking-tight text-slate-900">5 0</span>
+                                <span className="text-5xl font-bold tracking-tight text-slate-900">50</span>
                             </div>
                             <p className="mt-2 text-sm font-medium text-slate-600">Clínicas ativas</p>
                         </div>

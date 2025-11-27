@@ -44,7 +44,6 @@ export const signUpForm = z.object({
   password: z.string().min(6, "Senha deve ter ao menos 6 caracteres").optional(),
   dateOfBirth: z.date(),
   cpf: z.string().min(11, "CPF inválido").max(14),
-  role: z.enum(["PATIENT", "PSYCHOLOGIST"]),
   gender: z.enum(["MASCULINE", "FEMININE", "OTHER"]),
   expertise: z.enum([
     "OTHER",
@@ -87,6 +86,7 @@ export function SignUpForm({
         ...data,
         phoneNumber: data.phoneNumber.replace(/\D/g, ""),
         cpf: data.cpf.replace(/\D/g, ""),
+        role: "PSYCHOLOGIST"
       })
 
       toast.success("Psicólogo cadastrado com sucesso!", {
@@ -206,28 +206,6 @@ export function SignUpForm({
             )}
           />
         </Field>
-
-        <Field>
-          <FieldLabel>Função</FieldLabel>
-          <Controller
-            name="role"
-            control={control}
-            render={({ field }) => (
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione sua função" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PSYCHOLOGIST">Psicólogo</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </Field>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field>
             <FieldLabel>Gênero</FieldLabel>

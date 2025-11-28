@@ -1,6 +1,5 @@
 import { api } from '@/lib/axios'
 
-// 1. Enum de Status
 export const AppointmentStatus = {
   SCHEDULED: 'SCHEDULED',
   ATTENDING: 'ATTENDING',
@@ -13,21 +12,16 @@ export const AppointmentStatus = {
 export type AppointmentStatus =
   typeof AppointmentStatus[keyof typeof AppointmentStatus]
 
-// 2. Interface do Appointment (com relações)
 export interface Appointment {
-  patientName: string
   id: string
   patientId: string
   psychologistId: string
   diagnosis: string
   notes?: string | null
   scheduledAt: string
-  startedAt?: string | null
-  endedAt?: string | null
   status: AppointmentStatus
 
   patient: {
-    id(id: any): [any, any]
     firstName: string
     lastName: string
   }
@@ -37,17 +31,14 @@ export interface Appointment {
   }
 }
 
-// 3. Request atualizado (AGORA COM cpf e name)
 export interface GetAppointmentsRequest {
   pageIndex?: number
   perPage?: number
   status?: string | null
   orderBy?: 'asc' | 'desc'
-  cpf?: string
-  name?: string
+  name?: string // Mantemos 'name' aqui para compatibilidade com o componente que chama
 }
 
-// 4. Response
 export interface GetAppointmentsResponse {
   appointments: Appointment[]
   meta: {
@@ -57,7 +48,6 @@ export interface GetAppointmentsResponse {
   }
 }
 
-// 5. Função atualizada (cpf e name incluídos)
 export async function getAppointments(
   params: GetAppointmentsRequest,
 ): Promise<GetAppointmentsResponse> {
@@ -70,8 +60,8 @@ export async function getAppointments(
       orderBy: finalOrderBy,
 
       ...(params.status && { status: params.status }),
-      ...(params.cpf && { cpf: params.cpf }),
-      ...(params.name && { name: params.name }),
+      
+      ...(params.name && params.name.trim() !== '' && { patientName: params.name.trim() }),
     },
   })
 

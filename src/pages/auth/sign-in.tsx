@@ -7,12 +7,11 @@ export function SignIn() {
   return (
     <>
       <Helmet title="Entrar no MindFlush" />
-      {/* SEU LAYOUT ORIGINAL, CENTRALIZADO E COM MAX-W-[450PX] */}
-      <div className="flex min-h-svh justify-center p-4 sm:p-8"> {/* Removido items-center */}
+      <div className="flex min-h-svh justify-center p-4 sm:p-8"> 
         <Button
           variant={"link"}
           asChild
-          className="absolute right-4 top-4 sm:right-8 sm:top-8"
+          className="absolute right-4 top-4 sm:right-8 sm:top-8 cursor-pointer"
         >
           <Link to="/sign-up">Criar Conta</Link>
         </Button>
@@ -29,7 +28,7 @@ export function SignIn() {
             </p>
           </div>
 
-          <SignInForm /> 
+          <SignInForm />
         </div>
       </div>
     </>

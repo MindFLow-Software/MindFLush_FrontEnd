@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "react-router-dom"
 import { z } from "zod"
 
-
 import {
     Table,
     TableBody,
@@ -43,16 +42,22 @@ export function AppointmentsList() {
     const orderByParam = searchParams.get("orderBy")
     const perPage = Number(searchParams.get("perPage") ?? 10)
 
+    // 1. OBRIGATÓRIO: Ler o parâmetro "name" da URL
+    const name = searchParams.get("name")
+
     const orderBy = (orderByParam === 'asc' || orderByParam === 'desc') ? orderByParam : 'desc'
 
     const { data: result, isLoading, isError } = useQuery<GetAppointmentsResponse, Error>({
-        queryKey: ["appointments", pageIndex, status, orderBy],
+        // 2. OBRIGATÓRIO: Adicionar "name" na chave do cache (para o React Query saber que mudou)
+        queryKey: ["appointments", pageIndex, status, orderBy, name],
         queryFn: () =>
             getAppointments({
                 pageIndex,
                 perPage,
                 status: status === "all" ? null : status,
                 orderBy,
+                // 3. OBRIGATÓRIO: Passar o nome para a função da API
+                name: name || undefined,
             }),
         staleTime: 1000 * 60 * 5,
     })
@@ -87,7 +92,6 @@ export function AppointmentsList() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-16"></TableHead>
                                         <TableHead className="w-[180px]">Paciente</TableHead>
                                         <TableHead className="w-[140px]">Diagnóstico</TableHead>
                                         <TableHead className="w-[140px]">Notas</TableHead>
@@ -108,7 +112,7 @@ export function AppointmentsList() {
                                     ) : (
                                         <TableRow>
                                             <TableHead
-                                                colSpan={7}
+                                                colSpan={6}
                                                 className="text-center text-muted-foreground py-8"
                                             >
                                                 Nenhum agendamento encontrado.

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Trash2, UserPen, Loader2, ArrowRight } from "lucide-react"
+import { Trash2, UserPen, Loader2, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { TableCell, TableRow } from "@/components/ui/table"
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
@@ -11,14 +11,11 @@ import { toast } from "sonner"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
-// Importe seus componentes de edição se existirem
 import { EditAppointment } from "./edit-appointment-dialog"
 
-// APIs reais
 import { deleteAppointment } from "@/api/delete-appointment"
 import type { Appointment, AppointmentStatus } from "@/api/get-appointment"
 
-// Mock temporário para iniciar (substitua pela importação real quando tiver)
 async function startAppointment(_id: string) {
     await new Promise(resolve => setTimeout(resolve, 1000))
 }
@@ -80,51 +77,6 @@ export function AppointmentsTableRow({ appointment }: AppointmentProps) {
 
     return (
         <TableRow>
-            {/* 🔍 Coluna de Detalhes */}
-            <TableCell>
-                <Dialog>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <DialogTrigger asChild>
-                                    <Button variant="outline" size="xs">
-                                        <Search className="h-3 w-3" />
-                                        <span className="sr-only">Detalhes da consulta</span>
-                                    </Button>
-                                </DialogTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">Ver detalhes</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Detalhes do Agendamento</DialogTitle>
-                            <DialogDescription>Informações completas da consulta.</DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-3 text-sm">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <span className="font-semibold">Paciente:</span>
-                                <span className="col-span-3">{patientName}</span>
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <span className="font-semibold">Diagnóstico:</span>
-                                <span className="col-span-3">{diagnosis}</span>
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <span className="font-semibold">Data:</span>
-                                <span className="col-span-3">
-                                    {format(new Date(scheduledAt), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
-                                </span>
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <span className="font-semibold">Notas:</span>
-                                <span className="col-span-3 text-muted-foreground">{notes || "Nenhuma nota registrada."}</span>
-                            </div>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            </TableCell>
 
             <TableCell className="font-medium">{patientName}</TableCell>
 

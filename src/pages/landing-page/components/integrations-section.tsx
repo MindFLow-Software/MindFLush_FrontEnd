@@ -1,188 +1,237 @@
-"use client"
-
-import type React from "react"
-
-import { ArrowRight } from "lucide-react"
-import { GoogleLogo, WhatsappLogo, VideoCamera, CreditCard, CalendarBlank, EnvelopeSimple } from "@phosphor-icons/react"
-
-// Button component simples para React puro
-function Button({
-    children,
-    className = "",
-    onClick,
-}: { children: React.ReactNode; className?: string; onClick?: () => void }) {
-    return (
-        <button
-            onClick={onClick}
-            className={`inline-flex items-center justify-center rounded-md font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${className}`}
-        >
-            {children}
-        </button>
-    )
-}
+import {
+    ArrowRight,
+    CreditCard,
+    Mail,
+    Calendar,
+    Video,
+    MessageCircle,
+    Globe,
+    Zap,
+    Users
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { CreditCardIcon, WhatsappLogoIcon } from "@phosphor-icons/react";
 
 interface IntegrationCardProps {
-    icon: React.ReactNode
-    label: string
-    bgColor: string
-    iconColor: string
-    position: string
-    delay?: string
+    icon: React.ReactNode;
+    label: string;
+    color: string;
+    delay?: number;
+    x: string | number;
+    y: string | number;
 }
 
-function IntegrationCard({ icon, label, bgColor, iconColor, position, delay = "0s" }: IntegrationCardProps) {
+const FloatingCard = ({ icon, label, color, delay = 0, x, y }: IntegrationCardProps) => {
     return (
-        <div
-            className={`${position} hidden lg:flex flex-row items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-lg shadow-slate-900/5 backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-slate-900/10 hover:-translate-y-1 animate-float`}
+        <motion.div
+            initial={{ opacity: 0, scale: 0.8, x: 0, y: 0 }}
+            animate={{
+                opacity: 1,
+                scale: 1,
+                y: [0, -10, 0],
+            }}
+            transition={{
+                y: {
+                    duration: 4,
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                    ease: "easeInOut",
+                    delay: delay
+                },
+                opacity: { duration: 0.5 },
+                scale: { duration: 0.5 }
+            }}
+            className="absolute hidden lg:flex items-center gap-3 p-3 pr-5 bg-white/90 backdrop-blur-md border border-white/20 shadow-xl rounded-2xl z-20 hover:scale-105 transition-transform cursor-default"
             style={{
-                animationDelay: delay,
-                animationDuration: "6s",
-                animationTimingFunction: "ease-in-out",
-                animationIterationCount: "infinite",
+                left: typeof x === 'number' ? `${x}%` : x,
+                top: typeof y === 'number' ? `${y}%` : y,
+                boxShadow: "0 8px 32px -4px rgba(0, 0, 0, 0.1), 0 4px 16px -2px rgba(0, 0, 0, 0.05)"
             }}
         >
-            <div
-                className={`flex h-11 w-11 items-center justify-center rounded-xl ${bgColor} ${iconColor} transition-transform duration-300 group-hover:rotate-12`}
-            >
+            <div className={`flex items-center justify-center w-10 h-10 rounded-xl ${color} text-white shadow-sm`}>
                 {icon}
             </div>
-            <span className="pr-2 font-semibold text-slate-800 text-sm whitespace-nowrap">{label}</span>
-        </div>
-    )
-}
+            <span className="font-semibold text-slate-700 text-sm">{label}</span>
+        </motion.div>
+    );
+};
 
 export function IntegrationsSection() {
     return (
-        <section
-            id="integracoes"
-            className="relative overflow-hidden  bg-linear-to-b from-slate-50 to-white py-24 lg:py-32"
-        >
-            {/* Background Pattern (Grid) */}
-            <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-size-[32px_32px]"></div>
+        <section className="relative py-24 lg:py-32 overflow-hidden bg-slate-50">
 
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 z-0 bg-gradient-radial from-transparent via-white/40 to-white/80"></div>
+            {/* Background Elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-400/10 blur-[120px] rounded-full opacity-60" />
+                <div className="absolute bottom-0 left-0 w-[800px] h-[600px] bg-indigo-400/10 blur-[100px] rounded-full opacity-40" />
 
-            {/* Orbs */}
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: "8s" }}></div>
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: "10s", animationDelay: "2s" }}></div>
+                {/* Grid Pattern */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+            </div>
 
-            <div className="container relative z-10 mx-auto px-6 md:px-8 lg:px-12">
-                <div className="relative mx-auto max-w-4xl text-center">
+            <div className="container relative z-10 mx-auto px-4 md:px-6">
+                <div className="flex flex-col items-center text-center mb-16 lg:mb-24">
 
                     {/* Badge */}
-                    <div className="mb-6 flex justify-center animate-fade-in-down">
-                        <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur-sm transition-all hover:shadow-md hover:scale-105">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                            </span>
-                            Integrações Poderosas
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-sm mb-6"
+                    >
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                         </span>
-                    </div>
+                        <span className="text-xs font-semibold text-slate-600 tracking-wide uppercase">Integrações Poderosas</span>
+                    </motion.div>
 
-                    {/* Título */}
-                    <h2 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl animate-fade-in-up text-balance">
-                        Conecte as ferramentas que{" "}
-                        <span className="relative inline-block">
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-blue-500">
-                                você já ama usar
-                            </span>
-                            <svg className="absolute -bottom-2 left-0 w-full" height="8" viewBox="0 0 200 8" fill="none">
-                                <path d="M1 5.5C50 2.5 150 2.5 199 5.5" stroke="url(#gradient)" strokeWidth="3" strokeLinecap="round" />
-                                <defs>
-                                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.3" />
-                                        <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.8" />
-                                    </linearGradient>
-                                </defs>
+                    {/* Heading */}
+                    <motion.h2
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.1 }}
+                        className="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 max-w-4xl mb-6"
+                    >
+                        Conecte as ferramentas que <br className="hidden md:block" />
+                        <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                            você já ama usar
+                            <svg className="absolute -bottom-2 left-0 w-full h-3 text-blue-500/30" viewBox="0 0 100 10" preserveAspectRatio="none">
+                                <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="3" fill="none" />
                             </svg>
                         </span>
-                    </h2>
+                    </motion.h2>
 
-                    {/* Subtítulo */}
-                    <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-slate-600 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-                        O MindFlush trabalha em <strong className="text-slate-700 font-semibold">harmonia perfeita</strong> com sua agenda, videochamadas e ferramentas financeiras. Sincronize tudo em um clique,
-                        <span className="text-blue-600 font-medium"> sem complicação</span>.
-                    </p>
+                    {/* Subheading */}
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.2 }}
+                        className="text-lg md:text-xl text-slate-600 max-w-2xl leading-relaxed mb-10"
+                    >
+                        O <span className="font-bold text-slate-800">MindFlush</span> trabalha em harmonia perfeita com sua agenda, videochamadas e ferramentas financeiras.
+                        Sincronize tudo em um clique, <span className="text-blue-600 font-medium">sem complicação</span>.
+                    </motion.p>
 
-                    {/* Botão */}
-                    <div className="mt-12 flex justify-center animate-fade-in" style={{ animationDelay: "0.4s" }}>
-                        <Button
-                            className="group relative h-14 rounded-full bg-linear-to-r from-blue-500 to-blue-600 px-8 text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105 active:scale-100"
-                        >
-                            <span className="relative z-10 flex items-center">
+                    {/* CTA Button */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.3 }}
+                    >
+                        <Link to="/sign-in">
+                            <Button size="lg" className="cursor-pointer h-14 px-8 rounded-full text-base bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/25 group">
+
                                 Acesse agora
-                                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                            </span>
-                            <div className="absolute inset-0 rounded-full bg-linear-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-shimmer"></div>
-                        </Button>
+                                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                            </Button>
+                        </Link>
+                    </motion.div>
+                </div>
+
+                {/* Integrations Visualization */}
+                <div className="relative h-[400px] w-full max-w-5xl mx-auto mt-12 hidden md:block">
+                    {/* Center Hub */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                        <div className="relative w-24 h-24 bg-white rounded-3xl shadow-2xl flex items-center justify-center border border-slate-100 z-20">
+                            <Zap className="w-12 h-12 text-blue-600 fill-blue-600" />
+                            {/* Pulse Rings */}
+                            <div className="absolute inset-0 rounded-3xl border-2 border-blue-500/20 animate-ping [animation-duration:3s]" />
+                            <div className="absolute -inset-4 rounded-[2rem] border border-blue-500/10 animate-pulse" />
+                        </div>
                     </div>
 
-                    {/* ---- CARDS ESPELHADOS ---- */}
+                    {/* Connecting Lines (SVG) */}
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-20">
+                        <defs>
+                            <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#3B82F6" stopOpacity="0" />
+                                <stop offset="50%" stopColor="#3B82F6" stopOpacity="1" />
+                                <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
+                            </linearGradient>
+                        </defs>
+                        {/* Lines connecting center to positions */}
+                        <path d="M512 200 L 250 100" stroke="url(#line-gradient)" strokeWidth="2" strokeDasharray="4 4" />
+                        <path d="M512 200 L 770 100" stroke="url(#line-gradient)" strokeWidth="2" strokeDasharray="4 4" />
+                        <path d="M512 200 L 200 250" stroke="url(#line-gradient)" strokeWidth="2" strokeDasharray="4 4" />
+                        <path d="M512 200 L 820 250" stroke="url(#line-gradient)" strokeWidth="2" strokeDasharray="4 4" />
+                        <path d="M512 200 L 300 350" stroke="url(#line-gradient)" strokeWidth="2" strokeDasharray="4 4" />
+                        <path d="M512 200 L 720 350" stroke="url(#line-gradient)" strokeWidth="2" strokeDasharray="4 4" />
+                    </svg>
 
-                    {/* Esquerda Superior → Stripe & Pix */}
-                    <IntegrationCard
-                        position="absolute -left-35 top-8"
-                        icon={<CreditCard size={24} weight="fill" />}
+                    {/* Left Side Cards */}
+                    <FloatingCard
+                        icon={<CreditCardIcon className="w-6 h-6" />}
                         label="Boleto & Pix"
-                        bgColor="bg-indigo-50"
-                        iconColor="text-indigo-600"
-                        delay="4s"
+                        color="bg-purple-600"
+                        x="15%" y="15%"
+                        delay={0}
                     />
-
-                    {/* Esquerda Meio → Outlook */}
-                    <IntegrationCard
-                        position="absolute -left-28 bottom-37"
-                        icon={<EnvelopeSimple size={24} weight="bold" />}
-                        label="Email"
-                        bgColor="bg-sky-50"
-                        iconColor="text-sky-600"
-                        delay="3s"
+                    <FloatingCard
+                        icon={<Mail className="w-6 h-6" />}
+                        label="Outlook Email"
+                        color="bg-emerald-500"
+                        x="10%" y="45%"
+                        delay={1.5}
                     />
-
-                    {/* Esquerda Inferior → Apple Calendar */}
-                    <IntegrationCard
-                        position="absolute -left-28 bottom-2"
-                        icon={<CalendarBlank size={24} weight="bold" />}
+                    <FloatingCard
+                        icon={<Calendar className="w-6 h-6" />}
                         label="Calendario"
-                        bgColor="bg-slate-100"
-                        iconColor="text-slate-800"
-                        delay="5s"
+                        color="bg-blue-600"
+                        x="20%" y="75%"
+                        delay={0.5}
                     />
 
-                    {/* Direita Superior → Google Agenda */}
-                    <IntegrationCard
-                        position="absolute -right-26 top-8"
-                        icon={<GoogleLogo size={24} weight="bold" />}
-                        label="Agenda"
-                        bgColor="bg-blue-50"
-                        iconColor="text-blue-600"
-                        delay="0s"
+                    {/* Right Side Cards */}
+                    <FloatingCard
+                        icon={<Users className="w-6 h-6" />}
+                        label="Cadastro"
+                        color="bg-sky-500"
+                        x="70%" y="15%"
+                        delay={1}
                     />
-
-                    {/* Direita Meio → WhatsApp */}
-                    <IntegrationCard
-                        position="absolute -right-26 top-38"
-                        icon={<WhatsappLogo size={24} weight="fill" />}
+                    <FloatingCard
+                        icon={<WhatsappLogoIcon className="w-6 h-6" />}
                         label="WhatsApp"
-                        bgColor="bg-green-50"
-                        iconColor="text-green-600"
-                        delay="1s"
+                        color="bg-green-500"
+                        x="75%" y="45%"
+                        delay={2}
                     />
-
-                    {/* Direita Inferior → Zoom & Meet */}
-                    <IntegrationCard
-                        position="absolute -right-22 bottom-2"
-                        icon={<VideoCamera size={24} weight="fill" />}
-                        label="Video Conferencia"
-                        bgColor="bg-blue-500"
-                        iconColor="text-white"
-                        delay="2s"
+                    <FloatingCard
+                        icon={<Video className="w-6 h-6" />}
+                        label="Videoconferência"
+                        color="bg-violet-400"
+                        x="65%" y="75%"
+                        delay={0.2}
                     />
 
                 </div>
+
+                {/* Mobile Fallback for Integrations (Simple Grid) */}
+                <div className="md:hidden grid grid-cols-2 gap-4 mt-12">
+                    {[
+                        { icon: CreditCard, label: "Stripe & Pix", color: "text-indigo-600 bg-indigo-50" },
+                        { icon: Globe, label: "Google Agenda", color: "text-blue-600 bg-blue-50" },
+                        { icon: Mail, label: "Email", color: "text-sky-600 bg-sky-50" },
+                        { icon: MessageCircle, label: "WhatsApp", color: "text-green-600 bg-green-50" },
+                        { icon: Calendar, label: "Calendar", color: "text-slate-700 bg-slate-100" },
+                        { icon: Video, label: "Video Conf", color: "text-blue-500 bg-blue-50" },
+                    ].map((item, i) => (
+                        <div key={i} className="flex flex-col items-center p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${item.color}`}>
+                                <item.icon className="w-5 h-5" />
+                            </div>
+                            <span className="text-sm font-medium text-slate-700">{item.label}</span>
+                        </div>
+                    ))}
+                </div>
+
             </div>
         </section>
-    )
+    );
 }

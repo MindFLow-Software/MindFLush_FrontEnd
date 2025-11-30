@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck, CheckCircle } from "lucide-react";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
 const userAvatars = [
@@ -9,70 +10,91 @@ const userAvatars = [
     "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=64&h=64",
 ];
 
-export function Hero() {
+export function HeroSection() {
     return (
-        <section className="relative overflow-hidden bg-slate-50 pt-16 md:pt-20 lg:pt-32 pb-24">
-            {/* Background Blur */}
-            <div className="absolute top-1/2 -right-36 z-0 h-96 w-96 rounded-full bg-blue-600 opacity-20 blur-3xl filter" />
-            <div className="absolute -top-24 -left-24 z-0 h-96 w-96 rounded-full bg-blue-400 opacity-20 blur-3xl filter" />
+        <section className="relative overflow-hidden bg-slate-50/50 pt-12 md:pt-20 lg:pt-32 pb-24">
+            {/* Background Decorations */}
+            <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[800px] h-[800px] bg-gradient-to-br from-blue-100/40 to-indigo-100/40 rounded-full blur-3xl opacity-60 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[600px] h-[600px] bg-gradient-to-tr from-sky-100/40 to-blue-100/40 rounded-full blur-3xl opacity-60 pointer-events-none" />
 
-            <div className="container relative z-10 mx-auto px-6 md:px-8 lg:px-12">
-                <div className="grid gap-12 lg:grid-cols-2 lg:gap-8 items-center">
+            {/* Grid Pattern */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 
-                    <div className="flex flex-col items-start space-y-8">
+            <div className="container relative z-10 mx-auto px-4 md:px-6 lg:px-12">
+                <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
 
-                        <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-4 py-1.5 shadow-sm">
+                    {/* LEFT COLUMN: Content */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="flex flex-col items-start space-y-8"
+                    >
+                        {/* Trust Badge */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="inline-flex items-center gap-3 rounded-full border border-white/60 bg-white/80 backdrop-blur-sm px-2 pl-2 py-1.5 pr-5 shadow-sm hover:shadow-md transition-shadow cursor-default"
+                        >
                             <div className="flex -space-x-3">
                                 {userAvatars.map((url, i) => (
-                                    <img
-                                        key={i}
-                                        src={url}
-                                        alt={`User ${i}`}
-                                        className="h-8 w-8 rounded-full border-2 border-white object-cover"
-                                    />
+                                    <div key={i} className="relative h-8 w-8 rounded-full border-2 border-white overflow-hidden">
+                                        <img
+                                            src={url}
+                                            alt={`User ${i}`}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    </div>
                                 ))}
+                                <div className="h-8 w-8 rounded-full border-2 border-white bg-blue-50 flex items-center justify-center text-[10px] font-bold text-blue-600">
+                                    +1k
+                                </div>
                             </div>
-                            <span className="text-sm font-medium text-slate-600 pl-2">
-                                Escolhido por <span className="font-bold text-blue-600">+100 Psicólogos</span>
+                            <span className="text-sm font-medium text-slate-600">
+                                Escolhido por <span className="font-bold text-blue-600">Psicólogos</span>
                             </span>
-                        </div>
+                        </motion.div>
 
+                        {/* Headline */}
                         <div className="space-y-4">
-                            <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.1]">
                                 Foque no paciente. <br />
-                                <span className="text-blue-600">A gestão é conosco.</span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                                    A gestão é conosco.
+                                </span>
                             </h1>
-                            <p className="max-w-xl text-lg text-slate-600 leading-relaxed">
+                            <p className="max-w-lg text-lg text-slate-600 leading-relaxed">
                                 Infraestrutura completa para sua clínica. Prontuários, agendamento e financeiro em um só lugar. Feito para psicólogos modernos.
                             </p>
                         </div>
 
-                        <div className="flex flex-col w-full gap-3 sm:flex-row sm:items-center cursor-pointer">
-                            <Link  to="/sign-in" >
-                                <Button size="lg" className="bg-blue-600 text-white hover:bg-blue-700 h-12 px-8 text-base shadow-lg shadow-blue-600/20">
-                                    Começar agora
-                                    <ArrowRight className="ml-2 h-5 w-5" />
+                        {/* CTA Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                            <Link to="/sign-in">
+                                <Button size="lg" className="cursor-pointer h-14 px-8 text-base rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/25 transition-all hover:scale-105 active:scale-95 group">
+                                    Começar Gratuitamente
+                                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                                 </Button>
                             </Link>
                         </div>
 
-                        <div className="flex items-center gap-8 pt-4">
+                        {/* Security Badge */}
+                        <div className="flex items-center gap-6 pt-4 border-t border-slate-200 w-full max-w-md">
                             <div className="flex items-center gap-2">
-                                <div className="rounded-full bg-blue-100 p-2 text-blue-600">
-                                    <ShieldCheck size={20} />
+                                <div className="p-1.5 rounded-full bg-green-100 text-green-600">
+                                    <ShieldCheck size={16} strokeWidth={2.5} />
                                 </div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-900">Seguro</p>
-                                    <p className="text-xs text-slate-500">Dados criptografados</p>
+                                <span className="text-sm font-medium text-slate-700">LGPD Compliance</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 rounded-full bg-blue-100 text-blue-600">
+                                    <CheckCircle size={16} strokeWidth={2.5} />
                                 </div>
+                                <span className="text-sm font-medium text-slate-700">Criptografia E2E</span>
                             </div>
                         </div>
-                    </div>
-
-                    {/* LADO DIREITO: Mockup Visual (CSS Puro) */}
-                    <div className="relative mx-auto w-full max-w-[600px] lg:max-w-none">
-
-                    </div>
+                    </motion.div>                   
 
                 </div>
             </div>

@@ -1,6 +1,6 @@
 import { Footer } from "./components/footer"
 import { Header } from "./components/hearder"
-import { Hero } from "./components/hero"
+import { HeroSection } from "./components/hero"
 import { IntegrationsSection } from "./components/integrations-section"
 import { ResourcesGrid } from "./components/resources-grid"
 import { SolutionsGrid } from "./components/solutions-grid"
@@ -13,7 +13,7 @@ export function LandingPage() {
             <Header />
 
             <main className="flex-1">
-                <Hero />
+                <HeroSection />
                 <StatsSection/>
                 <IntegrationsSection/>
                 <ResourcesGrid/>

@@ -1,82 +1,53 @@
 "use client"
 
-import { useMemo, useState, useEffect } from 'react'
-import { Goal } from 'lucide-react'
+import { Goal } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-
-interface MonthSessionData {
-    total: number
-}
-
-const fetchMonthSessionsTotal = async (_startDate?: Date, _endDate?: Date): Promise<MonthSessionData> => {
-    try {
-        await new Promise(resolve => setTimeout(resolve, 1200))
-        return { total: 58 }
-    } catch (error) {
-        console.error(error)
-        throw error
-    }
-}
+import { useQuery } from "@tanstack/react-query"
+import { getMonthSessionsAmount } from "@/api/get-month-sessions-amount"
 
 interface MonthPatientsAmountCardProps {
     startDate: Date | undefined
     endDate: Date | undefined
 }
 
-export function MonthPatientsAmountCard({ startDate, endDate }: MonthPatientsAmountCardProps) {
-    const [state, setState] = useState({
-        total: null as number | null,
-        isLoading: true,
-        isError: false
+export function MonthPatientsAmountCard({
+    startDate,
+    endDate,
+}: MonthPatientsAmountCardProps) {
+    const { data, isLoading, isError } = useQuery({
+        queryKey: ["metrics", "month-sessions-amount", startDate, endDate],
+        queryFn: () => getMonthSessionsAmount({ startDate, endDate }),
+        staleTime: 1000 * 60 * 5, // Cache de 5 minutos
+        // Mantém os dados anteriores visíveis enquanto busca os novos (evita "piscar")
+        placeholderData: (previousData) => previousData,
     })
 
-    useEffect(() => {
-        setState(prev => ({ ...prev, isLoading: true }))
+    // Valores reais vindos da API (ou 0 se ainda não carregou)
+    const total = data?.total ?? 0
+    const diffFromLastMonth = data?.diffFromLastMonth ?? 0
 
-        fetchMonthSessionsTotal(startDate, endDate)
-            .then(data =>
-                setState({ total: data.total, isLoading: false, isError: false })
-            )
-            .catch(() =>
-                setState(prev => ({ ...prev, isLoading: false, isError: true }))
-            )
-    }, [startDate, endDate])
+    // Assumindo que a API já retorna a porcentagem pronta (ex: 12 para 12%)
+    const formattedDiff = diffFromLastMonth
+    const diffSign = formattedDiff > 0 ? "+" : ""
 
-    const { displayValue, diffSign, formattedDiff, diffColorClass } = useMemo(() => {
-        if (state.total === null) {
-            return {
-                displayValue: '—',
-                diffSign: '',
-                formattedDiff: 0,
-                diffColorClass: 'text-emerald-500 dark:text-emerald-400'
-            }
-        }
-
-        const displayValue = state.total
-        const diff = 0.12
-        const formattedDiff = diff * 100
-        const diffSign = formattedDiff >= 0 ? '+' : ''
-        const diffColorClass =
-            formattedDiff >= 0
-                ? 'text-emerald-500 dark:text-emerald-400'
-                : 'text-red-500 dark:text-red-400'
-
-        return { displayValue, diffSign, formattedDiff, diffColorClass }
-    }, [state.total])
+    const diffColorClass =
+        formattedDiff >= 0
+            ? "text-emerald-500 dark:text-emerald-400"
+            : "text-red-500 dark:text-red-400"
 
     return (
         <Card
             className={cn(
                 "relative overflow-hidden rounded-2xl border border-border/60 border-b-[3px] border-b-purple-700 dark:border-b-purple-500",
-                "shadow-md shadow-black/20 dark:shadow-black/8 bg-card transition-all p-4"
+                "shadow-md shadow-black/20 dark:shadow-black/8 bg-card transition-all p-4",
             )}
         >
             <div
                 className={cn(
                     "absolute -top-14 -right-14 w-40 h-40 rounded-full",
                     "bg-linear-to-r from-purple-300/50 to-purple-700/30 dark:from-purple-400/70 dark:to-purple-900",
-                    "blur-3xl opacity-60 pointer-events-none"
+                    "blur-3xl opacity-60 pointer-events-none",
                 )}
             />
 
@@ -88,7 +59,7 @@ export function MonthPatientsAmountCard({ startDate, endDate }: MonthPatientsAmo
                     "w-3xl h-auto max-w-[150px]",
                     "opacity-70",
                     "pointer-events-none",
-                    "translate-x-1/4 translate-y-1/4"
+                    "translate-x-1/4 translate-y-1/4",
                 )}
             />
 
@@ -97,20 +68,21 @@ export function MonthPatientsAmountCard({ startDate, endDate }: MonthPatientsAmo
                     <Goal className="size-5 text-purple-600 dark:text-purple-400" />
                 </div>
 
-                {state.isLoading ? (
+                {isLoading ? (
                     <div className="space-y-2">
                         <div className="h-6 w-20 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
                         <div className="h-3 w-40 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
                     </div>
-                ) : state.isError ? (
+                ) : isError ? (
                     <div className="flex flex-col gap-1">
-                        <span className="text-sm font-medium text-red-500">Erro ao carregar</span>
-                        <span className="text-xs text-muted-foreground">Tente novamente</span>
+                        <span className="text-sm font-medium text-red-500">
+                            Erro ao carregar
+                        </span>
                     </div>
                 ) : (
                     <div className="flex flex-col gap-1.5">
                         <span className="text-2xl font-semibold tracking-tight leading-none">
-                            {displayValue.toLocaleString("pt-BR")}
+                            {total.toLocaleString("pt-BR")}
                         </span>
 
                         <p className="text-[13px] text-muted-foreground font-medium leading-none">
@@ -120,7 +92,7 @@ export function MonthPatientsAmountCard({ startDate, endDate }: MonthPatientsAmo
                         <p className="text-xs text-muted-foreground leading-relaxed">
                             <span className={cn("font-semibold", diffColorClass)}>
                                 {diffSign}
-                                {formattedDiff.toFixed(1)}%
+                                {formattedDiff}%
                             </span>{" "}
                             em relação ao mês anterior
                         </p>

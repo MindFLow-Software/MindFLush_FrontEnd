@@ -55,7 +55,7 @@ export function Dashboard() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <PatientsCountCard startDate={startDate} endDate={endDate} />
                     <PatientsAmountCard />
-                    <MonthPatientsAmountCard startDate={startDate} endDate={endDate} />
+                    {/* <MonthPatientsAmountCard startDate={startDate} endDate={endDate} /> */}
                 </div>
             </div>
 

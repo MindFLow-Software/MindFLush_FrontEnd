@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { UserRoundPlus } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
+import { Search, UserRoundPlus } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { useSearchParams } from "react-router-dom"
 import { z } from "zod"
@@ -9,12 +9,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Dialog } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { RegisterPatients } from "./register-patients"
 
 const patientsFilterSchema = z.object({
-  name: z.string().optional(),
-  cpf: z.string().optional(),
+  query: z.string().optional(),
   status: z.string().optional(),
 })
 
@@ -35,86 +34,86 @@ export function PatientsTableFilters({ onPatientRegistered }: PatientsTableFilte
   const { register, watch } = useForm<PatientsFilterSchema>({
     resolver: zodResolver(patientsFilterSchema),
     defaultValues: {
-      name: name ?? "",
-      cpf: cpf ?? "",
+      query: name ?? cpf ?? "",
       status: status ?? "all",
     },
   })
 
-  const watchedName = watch("name")
-  const watchedCpf = watch("cpf")
+  const watchedQuery = watch("query")
+  const watchedStatus = watch("status")
 
-  function applyFilters({ name, cpf, status }: PatientsFilterSchema) {
-    setSearchParams((state) => {
-      if (name) state.set("name", name)
-      else state.delete("name")
+  const applyFilters = useCallback(
+    ({ query, status }: PatientsFilterSchema) => {
+      setSearchParams((state) => {
+        const newState = new URLSearchParams(state)
 
-      if (cpf) state.set("cpf", cpf)
-      else state.delete("cpf")
+        // Lógica Unificada: Detecta se é CPF (números) ou Nome (texto)
+        if (query) {
+          if (/\d/.test(query)) {
+            newState.set("cpf", query)
+            newState.delete("name")
+          } else {
+            newState.set("name", query)
+            newState.delete("cpf")
+          }
+        } else {
+          newState.delete("name")
+          newState.delete("cpf")
+        }
 
-      if (status && status !== "all") state.set("status", status)
-      else state.delete("status")
+        if (status && status !== "all") {
+          newState.set("status", status)
+        } else {
+          newState.delete("status")
+        }
 
-      // 🔴 ANTES (ERRADO):
-      // state.set("pageIndex", "0")
+        newState.set("page", "1")
 
-      // 🟢 DEPOIS (CORRETO):
-      // Removemos o parâmetro técnico e setamos a página humana para 1
-      state.delete("pageIndex")
-      state.set("page", "1")
-
-      return state
-    })
-  }
+        return newState
+      })
+    },
+    [setSearchParams],
+  )
 
   useEffect(() => {
     const timeout = setTimeout(() => {
       applyFilters({
-        name: watchedName,
-        cpf: watchedCpf,
-        status: status ?? "all",
+        query: watchedQuery,
+        status: watchedStatus ?? "all",
       })
     }, 400)
 
     return () => clearTimeout(timeout)
-  }, [watchedName, watchedCpf])
+  }, [watchedQuery, watchedStatus, applyFilters])
+
+  const handlePatientSuccess = useCallback(() => {
+    setIsRegisterOpen(false)
+    onPatientRegistered?.()
+  }, [onPatientRegistered])
 
   return (
     <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
-
       <div className="flex flex-col lg:flex-row gap-2 flex-1 lg:items-center">
-        <Input
-          placeholder="Buscar por CPF"
-          className="h-8 w-full lg:w-auto"
-          {...register("cpf")}
-        />
-
-        <Input
-          placeholder="Buscar por Nome"
-          className="h-8 w-full lg:w-[320px]"
-          {...register("name")}
-        />
+        <div className="relative flex-1 lg:flex-initial">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input placeholder="Buscar por Nome ou CPF" className="h-8 w-full lg:w-[320px] pl-8" {...register("query")} />
+        </div>
       </div>
 
       <div className="flex items-center">
-        <Button
-          size="sm"
-          className="gap-2 w-full lg:w-auto shrink-0 cursor-pointer"
-          onClick={() => setIsRegisterOpen(true)}
-        >
+        <Button size="sm" className="gap-2 w-full lg:w-auto shrink-0" onClick={() => setIsRegisterOpen(true)}>
           <UserRoundPlus className="h-4 w-4" />
           Cadastrar paciente
         </Button>
 
         <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
-          {isRegisterOpen && (
-            <RegisterPatients
-              onSuccess={() => {
-                setIsRegisterOpen(false)
-                if (onPatientRegistered) onPatientRegistered()
-              }}
-            />
-          )}
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Registar Paciente</DialogTitle>
+              <DialogDescription>A funcionalidade de registo será implementada aqui.</DialogDescription>
+            </DialogHeader>
+            {isRegisterOpen && <RegisterPatients onSuccess={handlePatientSuccess} />}
+          </DialogContent>
         </Dialog>
       </div>
     </div>

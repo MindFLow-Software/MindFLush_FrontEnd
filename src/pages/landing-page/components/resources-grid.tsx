@@ -38,7 +38,7 @@ export function ResourcesGrid() {
                     <div className="group flex flex-col overflow-hidden rounded-3xl border border-slate-300 bg-white transition-all duration-300 hover:shadow-xl hover:shadow-slate-200">
 
                         <div className="relative h-72 w-full overflow-hidden bg-slate-50 sm:h-80 lg:h-96">
-                            <img src="/mind2.png" alt="Design Intuitivo" className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105" />
+                            <img src="/mind5.png" alt="Design Intuitivo" className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105" />
                         </div>
 
                         <div className="flex flex-1 flex-col justify-between border-t border-slate-100 p-8">

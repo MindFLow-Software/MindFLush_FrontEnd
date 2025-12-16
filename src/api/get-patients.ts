@@ -1,60 +1,58 @@
 import { api } from "@/lib/axios"
-import { formatCPF } from "@/utils/formatCPF"
-import { formatPhone } from "@/utils/formatPhone"
 
-export interface Patient {
-    id: string
-    firstName: string
-    lastName: string
-    email?: string
-    cpf: string
-    phoneNumber: string
-    profileImageUrl?: string
-    dateOfBirth: string
-    gender: "MASCULINE" | "FEMININE" | "OTHER"
-    status?: string
+// Definição da interface de filtros
+export interface GetPatientsFilters {
+  pageIndex: number
+  perPage: number
+  filter?: string | null | undefined
+  status?: string | null | undefined
 }
 
-export interface GetPatientsQuery { 
-    pageIndex?: number
-    perPage?: number
-    name?: string | null
-    cpf?: string | null 
-    status?: string | null
+// Interface corrigida do Paciente
+export interface Patient {
+  id: string
+  firstName: string
+  lastName: string
+  cpf: string
+  email: string
+  // 🐛 CORREÇÃO 1: Definindo phoneNumber como string (e não opcional) para evitar erro de tipagem.
+  // Se o backend pode retornar undefined, mude para: phoneNumber: string | undefined
+  phoneNumber: string 
+  
+  // 🐛 CORREÇÃO 2: Alterando 'MALE'/'FEMALE' para 'MASCULINE'/'FEMININE'
+  // (Baseado na lógica genderConfig do seu componente PatientsTableRowItem)
+  gender: 'MASCULINE' | 'FEMININE' | 'OTHER'
+  
+  status: 'Ativo' | 'Inativo' // Sugestão: tornar o status mais específico
+  createdAt: string
+  
+  // 🐛 CORREÇÃO 3: ADICIONANDO 'dateOfBirth' (Propriedade ausente que causou o erro 2339)
+  dateOfBirth: string // Supondo que a API retorna como string (ISO date ou similar)
 }
 
 export interface GetPatientsResponse {
-    patients: Patient[]
-    meta: {
-        pageIndex: number
-        perPage: number
-        totalCount: number
-    }
+  patients: Patient[]
+  meta: {
+    pageIndex: number
+    perPage: number
+    totalCount: number
+  }
 }
 
-export async function getPatients(query: GetPatientsQuery): Promise<GetPatientsResponse> {
-    const { pageIndex, perPage, name, cpf, status } = query 
-    
-    const response = await api.get<GetPatientsResponse>('/patients', {
-        params: {
-            pageIndex: pageIndex ?? 0,
-            perPage: perPage ?? 10,
-            name, 
-            cpf,
-            status: status === "all" ? null : status,
-        },
-    })
+export async function getPatients({
+  pageIndex,
+  perPage,
+  filter,
+  status,
+}: GetPatientsFilters) {
+  const response = await api.get<GetPatientsResponse>("/patients", {
+    params: {
+      pageIndex,
+      perPage,
+      filter,
+      status,
+    },
+  })
 
-    const rawData = response.data
-
-    const formattedPatients = rawData.patients.map(patient => ({
-        ...patient,
-        cpf: formatCPF(patient.cpf),
-        phoneNumber: formatPhone(patient.phoneNumber), 
-    }))
-
-    return {
-        ...rawData,
-        patients: formattedPatients,
-    }
+  return response.data
 }

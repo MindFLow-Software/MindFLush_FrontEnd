@@ -40,7 +40,7 @@ export function Pagination({
           <Button
             onClick={() => onPageChange(0)}
             variant="outline"
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 cursor-pointer"
             disabled={isFirstPage}
           >
             <ChevronsLeft className="h-4 w-4" />
@@ -50,7 +50,8 @@ export function Pagination({
           <Button
             onClick={() => onPageChange(pageIndex - 1)}
             variant="outline"
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 cursor-pointer"
+
             disabled={isFirstPage}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -60,7 +61,8 @@ export function Pagination({
           <Button
             onClick={() => onPageChange(pageIndex + 1)}
             variant="outline"
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 cursor-pointer"
+
             disabled={isLastPage}
           >
             <ChevronRight className="h-4 w-4" />
@@ -70,7 +72,8 @@ export function Pagination({
           <Button
             onClick={() => onPageChange(pages - 1)}
             variant="outline"
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 cursor-pointer"
+
             disabled={isLastPage}
           >
             <ChevronsRight className="h-4 w-4" />

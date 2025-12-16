@@ -117,7 +117,7 @@ const DocumentUploadSection = memo(({ selectedFiles, onFilesChange }: DocumentUp
                         </EmptyContent>
                     </Empty>
                 ) : (
-                    <div className="space-y-2 border rounded-md p-2 mt-1 max-h-[160px] overflow-y-auto">
+                    <div className="space-y-2 border rounded-md p-2 mt-1 max-h-40 overflow-y-auto">
                         {selectedFiles.map((file, index) => (
                             <div key={`${file.name}-${index}`} className="flex items-center justify-between p-2 bg-muted/40 rounded-md border text-sm animate-in fade-in slide-in-from-bottom-1">
                                 <div className="flex items-center gap-3 overflow-hidden">

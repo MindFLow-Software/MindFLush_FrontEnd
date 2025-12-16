@@ -11,11 +11,17 @@ export function usePatientFilters() {
     .transform((val) => val - 1)
     .parse(page)
 
+  // 🔹 CORREÇÃO: Leitura do filtro unificado com fallback para legados name/cpf
+  const filter =
+    searchParams.get("filter") ??
+    searchParams.get("name") ??
+    searchParams.get("cpf")
+
+  // O objeto 'filters' agora retorna 'filter'.
   const filters = {
     pageIndex: Math.max(0, pageIndex),
     perPage: Number(searchParams.get("perPage") ?? "10"),
-    name: searchParams.get("name"),
-    cpf: searchParams.get("cpf"),
+    filter: filter,
     status: searchParams.get("status"),
   }
 
@@ -23,7 +29,7 @@ export function usePatientFilters() {
     setSearchParams((state) => {
       state.delete("pageIndex")
       state.set("page", (pageIndex + 1).toString())
-      return state 
+      return state
     })
   }
 
@@ -31,14 +37,24 @@ export function usePatientFilters() {
     setSearchParams((state) => {
       state.delete("pageIndex")
 
-      if (newFilters.name) state.set("name", newFilters.name)
-      else state.delete("name")
+      // Limpa espaços em branco extras do filtro (ex: ' nome ' -> 'nome')
+      const trimmedFilter = newFilters.filter?.trim()
 
-      if (newFilters.cpf) state.set("cpf", newFilters.cpf)
-      else state.delete("cpf")
+      // Lógica de escrita: Prioriza 'filter' e limpa os antigos
+      if (trimmedFilter) { // Usa o filtro limpo
+        state.set("filter", trimmedFilter)
+      } else {
+        state.delete("filter")
+      }
 
-      if (newFilters.status) state.set("status", newFilters.status)
-      else state.delete("status")
+      state.delete("name")
+      state.delete("cpf")
+
+      if (newFilters.status) {
+        state.set("status", newFilters.status)
+      } else {
+        state.delete("status")
+      }
 
       state.set("page", "1")
 
@@ -48,6 +64,7 @@ export function usePatientFilters() {
 
   function clearFilters() {
     setSearchParams((state) => {
+      state.delete("filter")
       state.delete("name")
       state.delete("cpf")
       state.delete("status")

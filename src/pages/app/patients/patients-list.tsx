@@ -10,7 +10,7 @@ import { PatientsTable } from "./components/patients-table-row"
 import { useHeaderStore } from "@/hooks/use-header-store"
 import { AchievementToast } from "@/components/achievement-toast"
 
-import { getPatients, type GetPatientsResponse } from "@/api/get-patients"
+import { getPatients, type GetPatientsResponse, type GetPatientsFilters } from "@/api/get-patients" // Importamos GetPatientsFilters para tipagem
 import { usePatientAchievements } from "@/hooks/use-patient-achievements"
 import { usePatientFilters } from "@/hooks/use-patient-filters"
 
@@ -18,7 +18,9 @@ import { usePatientFilters } from "@/hooks/use-patient-filters"
 export function PatientsList() {
     const { setTitle } = useHeaderStore()
 
-    const { filters, setPage } = usePatientFilters()
+    // 🔹 FIX: CASTING - Aplicamos casting para garantir que o TypeScript reconheça a estrutura de filtros com 'filter',
+    // resolvendo o erro de tipagem que o compilador está reportando.
+    const { filters, setPage } = usePatientFilters() as unknown as { filters: GetPatientsFilters, setPage: (pageIndex: number) => void };
 
     const { achievement, checkAchievement, clearAchievement } = usePatientAchievements()
 
@@ -26,9 +28,14 @@ export function PatientsList() {
         setTitle('Cadastro de Pacientes')
     }, [setTitle])
 
+    // 🔍 LOG DE DEBUG
+    console.log("Filtros Atuais para useQuery:", filters)
+
     // 3. Busca de Dados
     const { data: result, isLoading, isError } = useQuery<GetPatientsResponse>({
-        queryKey: ["patients", filters.pageIndex, filters.perPage, filters.name, filters.cpf, filters.status],
+        // 🔹 CORREÇÃO: Usamos filters.filter em vez de filters.name e filters.cpf
+        // Isso garante que a consulta seja refeita quando o campo de busca único mudar.
+        queryKey: ["patients", filters.pageIndex, filters.perPage, filters.filter, filters.status],
         queryFn: () => getPatients(filters),
         staleTime: 1000 * 60 * 5,
         placeholderData: (previousData) => previousData,

@@ -23,7 +23,7 @@ interface GetProfileApiResponse {
 }
 
 export async function getProfile(): Promise<GetProfileResponse> {
-  const response = await api.get<GetProfileApiResponse>('/psychologist/me')
+const response = await api.get<GetProfileApiResponse>('/psychologist/me')
 
   return response.data.psychologist
 }

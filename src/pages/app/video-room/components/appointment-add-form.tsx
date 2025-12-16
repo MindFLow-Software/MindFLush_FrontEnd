@@ -17,8 +17,8 @@ interface AppointmentAddFormProps {
   currentAppointmentId: string
   onFinishSession: () => void
 
-  onSessionStarted: () => void 
-  isSessionActive: boolean 
+  onSessionStarted: () => void
+  isSessionActive: boolean
 }
 
 export function AppointmentAddForm({
@@ -26,8 +26,8 @@ export function AppointmentAddForm({
   onSelectPatient,
   currentAppointmentId,
   onFinishSession,
-  onSessionStarted, 
-  isSessionActive,  
+  onSessionStarted,
+  isSessionActive,
 }: AppointmentAddFormProps) {
 
   const queryClient = useQueryClient()
@@ -60,7 +60,8 @@ export function AppointmentAddForm({
       getPatients({
         pageIndex: 0,
         perPage: 9999,
-        name: null,
+        // 🔹 CORREÇÃO: Usamos 'filter' em vez de 'name'
+        filter: null,
       }),
     staleTime: 1000 * 60 * 5,
   })

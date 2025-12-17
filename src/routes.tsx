@@ -1,4 +1,4 @@
-import { createBrowserRouter, Outlet } from 'react-router-dom' // Importe o Outlet
+import { createBrowserRouter, Outlet, redirect, Navigate, useLocation } from 'react-router-dom'
 
 import { AppLayout } from './pages/_layouts/app'
 import { AuthLayout } from './pages/_layouts/auth'
@@ -10,24 +10,45 @@ import { SignUp } from './pages/auth/sign-up'
 import { AppointmentsRoom } from './pages/app/video-room/appoinmets-room'
 import { AppointmentsList } from './pages/app/appointment/appointment-list'
 import { MockPsychologistProfilePage } from './pages/app/account/account'
-// import { DashboardFinance } from './pages/app/finance/dashboard-finance'
 import { LandingPage } from './pages/landing-page/landing-page'
 
 function LandingLayout() {
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1">
-        <Outlet /> 
+        <Outlet />
       </main>
     </div>
   )
 }
+const authLoader = () => {
+  const isAuthenticated = !!localStorage.getItem('token')
+  if (!isAuthenticated) {
+    return redirect('/sign-in')
+  }
+  return null
+}
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+  const isAuthenticated = !!localStorage.getItem('token');
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/sign-in" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
 
 export const router = createBrowserRouter([
   // GRUPO 1: Landing Page (Com Header)
   {
     path: '/',
-    element: <LandingLayout />, // Usa o layout com Header
+    element: <LandingLayout />,
     errorElement: <NotFound />,
     children: [
       {
@@ -37,7 +58,7 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // GRUPO 2: Autenticação (Sem Header da Landing, usa layout de Auth)
+  // GRUPO 2: Autenticação
   {
     path: '/',
     element: <AuthLayout />,
@@ -53,10 +74,16 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // GRUPO 3: Aplicação Logada (Dashboard, etc)
+  // GRUPO 3: Aplicação Logada
   {
     path: '/',
-    element: <AppLayout />,
+
+    loader: authLoader,
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: '/dashboard',

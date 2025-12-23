@@ -1,144 +1,129 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CheckCircle2, User, Loader2 } from "lucide-react"
-import { useQuery } from "@tanstack/react-query"
+import { User, Loader2, StopCircle, CalendarCheck } from "lucide-react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useMemo } from "react"
-import { getPatients } from "@/api/get-patients"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { startAppointment } from "@/api/start-appointment"
+import { getPatients } from "@/api/get-patients" // Volta para a API antiga
+import { startAppointmentSession } from "@/api/start-appointment-session"
+import { finishAppointmentSession } from "@/api/finish-appointment-session"
+import { toast } from "sonner"
 
 interface AppointmentAddFormProps {
   selectedPatientId: string
   onSelectPatient: (patientId: string) => void
-
   currentAppointmentId: string
-  onFinishSession: () => void
-
-  onSessionStarted: () => void
+  currentSessionId: string | null
+  onSessionStarted: (sessionId: string) => void
+  onSessionFinished: () => void
   isSessionActive: boolean
+  notes?: string
 }
 
 export function AppointmentAddForm({
   selectedPatientId,
   onSelectPatient,
   currentAppointmentId,
-  onFinishSession,
+  currentSessionId,
   onSessionStarted,
+  onSessionFinished,
   isSessionActive,
+  notes,
 }: AppointmentAddFormProps) {
-
   const queryClient = useQueryClient()
 
-  const startSessionMutation = useMutation({
-    mutationFn: startAppointment,
-    onSuccess: () => {
+  // Mutações
+  const { mutateAsync: startSessionFn, isPending: isStarting } = useMutation({
+    mutationFn: startAppointmentSession,
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] })
-      onSessionStarted()
+      onSessionStarted(data.sessionId)
+      toast.success("Atendimento iniciado!")
     },
-    onError: (error) => {
-      console.error("Erro ao iniciar sessão:", error)
-    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Erro ao iniciar sessão.")
+    }
   })
 
-  const handleStartSession = () => {
-    if (selectedPatientId && currentAppointmentId) {
-      startSessionMutation.mutate(currentAppointmentId)
-    }
-  }
+  const { mutateAsync: finishSessionFn, isPending: isFinishing } = useMutation({
+    mutationFn: finishAppointmentSession,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments"] })
+      onSessionFinished()
+      toast.success("Atendimento finalizado com sucesso.")
+    },
+    onError: () => toast.error("Erro ao finalizar atendimento.")
+  })
 
-  // ⭐ CORREÇÃO DO ERRO DO BUILD
-  const {
-    data: responseData,
-    isLoading: isPatientsLoading,
-    isError: isPatientsError,
-  } = useQuery({
+  // Busca TODOS os pacientes (Versão Antiga)
+  const { data: responseData, isLoading: isPatientsLoading } = useQuery({
     queryKey: ["all-psychologist-patients"],
-    queryFn: () =>
-      getPatients({
-        pageIndex: 0,
-        perPage: 9999,
-        // 🔹 CORREÇÃO: Usamos 'filter' em vez de 'name'
-        filter: null,
-      }),
+    queryFn: () => getPatients({ pageIndex: 0, perPage: 999, filter: null }),
     staleTime: 1000 * 60 * 5,
   })
 
   const patientOptions = useMemo(() => {
-    const patients = responseData?.patients ?? []
-    if (!Array.isArray(patients)) return []
-
-    return patients.map((patient) => ({
-      id: patient.id,
-      name: `${patient.firstName} ${patient.lastName}`,
-    }))
+    return responseData?.patients?.map((p) => ({
+      id: p.id,
+      name: `${p.firstName} ${p.lastName}`,
+    })) ?? []
   }, [responseData])
 
-  const loadingOrErrorState = isPatientsLoading || isPatientsError
-  const isMutationPending = startSessionMutation.isPending
-  const isSessionStarted = isSessionActive
+  async function handleAction() {
+    if (isSessionActive) {
+      if (!currentSessionId) return toast.error("ID da sessão não encontrado.")
+      await finishSessionFn({ sessionId: currentSessionId, notes })
+    } else {
+      if (!currentAppointmentId) return toast.error("Selecione um paciente com agendamento.")
+      await startSessionFn({ appointmentId: currentAppointmentId })
+    }
+  }
+
+  const isPending = isStarting || isFinishing
 
   return (
-    <Card className="lg:col-span-1">
+    <Card className={`transition-all ${isSessionActive ? 'border-destructive/50' : ''}`}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <User className="w-5 h-5" />
-          Selecionar Paciente
+          {isSessionActive ? (
+            <span className="text-destructive flex items-center gap-2 animate-pulse">
+              <StopCircle className="w-5 h-5" /> Sessão Ativa
+            </span>
+          ) : (
+            <><CalendarCheck className="w-5 h-5 text-primary" /> Iniciar Atendimento</>
+          )}
         </CardTitle>
-        <CardDescription>Selecione o paciente para iniciar a sessão.</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
-
-        {/* Select Paciente */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Paciente</label>
           <Select
             value={selectedPatientId}
             onValueChange={onSelectPatient}
-            disabled={loadingOrErrorState || isSessionStarted}
+            disabled={isSessionActive || isPatientsLoading || isPending}
           >
             <SelectTrigger>
-              {isPatientsLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              <SelectValue placeholder={isPatientsLoading ? "Carregando pacientes..." : "Selecione um paciente..."} />
+              {isPatientsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <User className="w-4 h-4 opacity-50" />}
+              <SelectValue placeholder="Selecione um paciente..." />
             </SelectTrigger>
-
             <SelectContent>
               {patientOptions.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.name}
-                </SelectItem>
+                <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
               ))}
-
-              {isPatientsError && (
-                <SelectItem value="error" disabled>Erro ao carregar</SelectItem>
-              )}
             </SelectContent>
           </Select>
         </div>
 
-        <div className="my-4 border-t" />
-
-        {/* Botão */}
         <Button
-          onClick={isSessionStarted ? onFinishSession : handleStartSession}
-          disabled={
-            isMutationPending ||
-            (!isSessionStarted && (!selectedPatientId || !currentAppointmentId))
-          }
-          size="sm"
-          className="gap-2 w-full cursor-pointer"
-          variant={isSessionStarted ? "outline" : "default"}
+          onClick={handleAction}
+          disabled={isPending || (!isSessionActive && !selectedPatientId)}
+          variant={isSessionActive ? "destructive" : "default"}
+          className="w-full gap-2"
         >
-          {isMutationPending ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-          )}
-
-          {isSessionStarted ? "Finalizar Sessão" : "Iniciar a Sessão"}
+          {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : isSessionActive ? "Finalizar Atendimento" : "Iniciar Sessão"}
         </Button>
       </CardContent>
     </Card>

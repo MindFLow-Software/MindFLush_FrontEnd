@@ -8,11 +8,11 @@ import { useHeaderStore } from "@/hooks/use-header-store"
 import { PatientsCountCard } from "./components/patients-count-card"
 import { MonthPatientsAmountCard } from "./components/month-patients-amount-card"
 import { PatientsAmountCard } from "./components/patients-amount-card"
-import { SessionsChart } from "./components/sessions-chart"
 import { PatientsByAgeChart } from "./components/patients-by-age-chart"
 import { PatientsByGenderChart } from "./components/patients-by-gender-chart"
 import { NewPatientsBarChart } from "./components/patients-amount-bar-chart"
 import { DateRangePicker } from "./components/date-range-picker"
+import { SessionsBarChart } from './components/sessions-chart'
 
 interface DateRange {
     from: Date | undefined
@@ -60,7 +60,7 @@ export function Dashboard() {
 
             <div className="grid grid-cols-1 gap-4 px-4 sm:px-6 lg:grid-cols-2">
                 <NewPatientsBarChart startDate={startDate} endDate={endDate} />
-                <SessionsChart startDate={startDate} endDate={endDate} />
+                <SessionsBarChart startDate={startDate} endDate={endDate} />
             </div>
 
             <div className="grid grid-cols-1 gap-4 px-4 sm:px-6 lg:grid-cols-2 mb-6">

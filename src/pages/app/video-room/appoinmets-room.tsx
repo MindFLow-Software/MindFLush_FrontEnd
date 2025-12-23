@@ -7,26 +7,23 @@ import { useQuery } from "@tanstack/react-query"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-
 import { getScheduledAppointment } from "@/api/get-scheduled-appointment"
 import { AppointmentAddForm } from "./components/appointment-add-form"
-import { VideoRoomMock } from "./components/video-room"
 import { useHeaderStore } from "@/hooks/use-header-store"
+import { SessionTimer } from "./components/SessionTimer"
 
 export function AppointmentsRoom() {
     const { setTitle } = useHeaderStore()
 
-    // --- ESTADOS DE CONTROLE ---
     const [selectedPatientId, setSelectedPatientId] = useState("")
     const [notes, setNotes] = useState("")
-    const [isSessionActive, setIsSessionActive] = useState(false) // Controla o botão
-    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null) // Guarda o ID da sessão
+    const [isSessionActive, setIsSessionActive] = useState(false)
+    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
 
     useEffect(() => {
         setTitle('Sala de Atendimento')
     }, [setTitle])
 
-    // Busca o agendamento vinculado ao paciente selecionado
     const { data: activeAppointmentData } = useQuery({
         queryKey: ['activeAppointment', selectedPatientId],
         queryFn: () => getScheduledAppointment(selectedPatientId),
@@ -36,7 +33,6 @@ export function AppointmentsRoom() {
 
     const currentAppointmentId = activeAppointmentData?.appointmentId || "";
 
-    // --- HANDLERS DE SESSÃO ---
     const handleSessionStarted = useCallback((sessionId: string) => {
         setCurrentSessionId(sessionId)
         setIsSessionActive(true)
@@ -59,50 +55,58 @@ export function AppointmentsRoom() {
             <Helmet title="Sala de Atendimento" />
 
             <div className="flex flex-col gap-4 mt-4">
-                <div className="grid grid-cols-1">
-                    <VideoRoomMock />
-                </div>
 
+                {/* <div className="grid grid-cols-1">
+                    <VideoRoomMock />
+                </div> */}
+                <div >
+                    <SessionTimer isActive={isSessionActive} />
+                </div>
                 <div className="grid grid-cols-1">
                     <AppointmentAddForm
                         selectedPatientId={selectedPatientId}
                         onSelectPatient={setSelectedPatientId}
                         currentAppointmentId={currentAppointmentId}
-                        currentSessionId={currentSessionId} // Passa o ID real
-                        isSessionActive={isSessionActive}   // Passa o estado real
+                        currentSessionId={currentSessionId}
+                        isSessionActive={isSessionActive}
                         onSessionStarted={handleSessionStarted}
                         onSessionFinished={handleSessionFinished}
                         notes={notes}
                     />
                 </div>
 
-                <Card className={`mt-2 transition-opacity ${!isSessionActive ? 'opacity-50' : 'opacity-100'}`}>
-                    <CardHeader>
-                        <CardTitle>Anotações e Evolução</CardTitle>
-                        <CardDescription>Registre a evolução clínica durante o atendimento.</CardDescription>
+                <Card className={`mt-2 transition-all duration-300 ${!isSessionActive ? 'opacity-50 pointer-events-none' : 'opacity-100 ring-1 ring-primary/20'}`}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                        <div>
+                            <CardTitle>Anotações e Evolução</CardTitle>
+                            <CardDescription>O histórico é registrado automaticamente ao finalizar.</CardDescription>
+                        </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Textarea
                                 id="notes"
-                                placeholder="Adicione observações..."
+                                placeholder="Descreva aqui os detalhes da sessão..."
                                 value={notes}
                                 onChange={handleNotesChange}
                                 disabled={!isSessionActive}
-                                rows={4}
-                                className="w-full resize-none"
+                                rows={6}
+                                className="w-full resize-none bg-background focus-visible:ring-primary"
                             />
-                            <div className="text-xs text-muted-foreground text-right">
-                                {notes.length}/{MAX_LENGTH} caracteres
+                            <div className="text-xs text-muted-foreground text-right tabular-nums">
+                                {notes.length.toLocaleString()}/{MAX_LENGTH.toLocaleString()} caracteres
                             </div>
                         </div>
 
-                        <Button
-                            disabled={!notes.trim() || !isSessionActive}
-                            className="w-full sm:w-auto"
-                        >
-                            Salvar Rascunho
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                variant="outline"
+                                disabled={!notes.trim() || !isSessionActive}
+                                className="text-xs"
+                            >
+                                Rascunho Temporário
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

@@ -4,38 +4,28 @@ import { useMemo } from "react"
 import { Goal } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useQuery } from "@tanstack/react-query"
-
-interface MonthSessionData {
-    total: number
-}
-
-const fetchMonthSessionsTotal = async (
-    _startDate?: Date,
-    _endDate?: Date,
-): Promise<MonthSessionData> => {
-    return { total: 58 }
-}
+import { getMonthlySessionsCount } from "@/api/get-monthly-sessions-count"
 
 interface MonthPatientsAmountCardProps {
     startDate: Date | undefined
     endDate: Date | undefined
 }
 
-export function MonthPatientsAmountCard({
-    startDate,
-    endDate,
-}: MonthPatientsAmountCardProps) {
-    const { data, isLoading, isError } = useQuery({
+export function MonthPatientsAmountCard({ startDate, endDate }: MonthPatientsAmountCardProps) {
+    const { data, isLoading, isError, refetch } = useQuery({
         queryKey: [
-            "month-sessions-total",
+            "month-sessions-count",
             startDate?.toISOString(),
-            endDate?.toISOString(),
+            endDate?.toISOString()
         ],
-        queryFn: () => fetchMonthSessionsTotal(startDate, endDate),
+        queryFn: () => getMonthlySessionsCount({
+            startDate: startDate?.toISOString(),
+            endDate: endDate?.toISOString()
+        }),
         staleTime: 1000 * 60 * 5,
     })
 
-    const total = data?.total ?? null
+    const total = data?.count ?? null
 
     const { displayValue, diffSign, formattedDiff, diffColorClass } =
         useMemo(() => {
@@ -48,15 +38,15 @@ export function MonthPatientsAmountCard({
                 }
             }
 
+            // Exemplo de cálculo: No futuro, o backend enviará este 'diff'
             const diff = 0.12
-            const formattedDiff = diff * 100
+            const calcDiff = diff * 100
 
             return {
                 displayValue: total,
-                diffSign: formattedDiff >= 0 ? "+" : "",
-                formattedDiff,
-                diffColorClass:
-                    formattedDiff >= 0 ? "text-purple-600" : "text-red-500",
+                diffSign: calcDiff >= 0 ? "+" : "",
+                formattedDiff: calcDiff,
+                diffColorClass: calcDiff >= 0 ? "text-purple-600" : "text-red-500",
             }
         }, [total])
 
@@ -100,13 +90,17 @@ export function MonthPatientsAmountCard({
                         <span className="text-sm font-medium text-red-500">
                             Erro ao carregar
                         </span>
-                        <span className="text-xs text-purple-700/70">
-                            Tente novamente
-                        </span>
+                        {/* Botão de recuperação: UX de alta qualidade */}
+                        <button
+                            onClick={() => refetch()}
+                            className="text-xs text-purple-700/70 underline underline-offset-2 hover:text-purple-900"
+                        >
+                            Tentar novamente
+                        </button>
                     </div>
                 ) : (
                     <div className="flex flex-col gap-1">
-                        <span className="text-4xl font-bold tracking-tight text-purple-950">
+                        <span className="text-4xl font-bold tracking-tight text-purple-950 tabular-nums">
                             {typeof displayValue === "number"
                                 ? displayValue.toLocaleString("pt-BR")
                                 : displayValue}

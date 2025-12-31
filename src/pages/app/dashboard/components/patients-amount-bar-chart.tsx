@@ -1,10 +1,9 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { format, subDays } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { useMemo } from "react"
 
 import {
     Card,
@@ -21,22 +20,19 @@ import {
     ChartTooltipContent,
 } from "@/components/ui/chart"
 
-import { Loader2, Users } from "lucide-react"
+import { Info, BarChart3, CircleX } from "lucide-react"
 import { getAmountPatientsChart } from "@/api/get-amount-patients-chart"
+import { useQuery } from "@tanstack/react-query"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const chartConfig = {
     newPatients: {
-        label: "Novos Pacientes",
-        color: "var(--chart-1)",
+        label: "Pacientes",
+        color: "var(--primary)",
     },
 } satisfies ChartConfig
 
-interface NewPatientsBarChartProps {
-    startDate?: Date
-    endDate?: Date
-}
-
-export function NewPatientsBarChart({ startDate: propStartDate, endDate: propEndDate }: NewPatientsBarChartProps) {
+export function NewPatientsBarChart({ startDate: propStartDate, endDate: propEndDate }: { startDate?: Date, endDate?: Date }) {
     const { startDate, endDate } = useMemo(() => {
         const end = propEndDate || new Date()
         const start = propStartDate || subDays(end, 7)
@@ -51,93 +47,119 @@ export function NewPatientsBarChart({ startDate: propStartDate, endDate: propEnd
 
     const chartData = useMemo(() => data || [], [data])
     const maxPatients = useMemo(() => Math.max(...chartData.map(d => d.newPatients), 0), [chartData])
-    const yAxisMax = useMemo(() => Math.max(10, maxPatients + Math.ceil(maxPatients * 0.2)), [maxPatients])
-
-    if (isLoading) {
-        return (
-            <Card className="col-span-6 flex h-[250px] items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </Card>
-        )
-    }
-
-    if (isError) {
-        return (
-            <Card className="col-span-6 flex h-[250px] items-center justify-center text-red-500 font-medium">
-                Erro ao carregar dados do gráfico
-            </Card>
-        )
-    }
-
-    if (chartData.length === 0) {
-        return (
-            <Card className="col-span-6 flex h-[250px] flex-col items-center justify-center gap-2 text-muted-foreground border-dashed">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                    <Users className="h-6 w-6 opacity-50" />
-                </div>
-                <div className="text-center space-y-1">
-                    <p className="font-medium">Nenhum paciente encontrado</p>
-                    <p className="text-sm text-muted-foreground">Não houveram novos cadastros neste período.</p>
-                </div>
-            </Card>
-        )
-    }
+    const yAxisMax = useMemo(() => Math.max(5, maxPatients + 1), [maxPatients])
 
     return (
-        <Card className="col-span-6 py-0">
-            <CardHeader className="px-6 pt-5 pb-3">
-                <CardTitle className="text-base font-medium">
-                    Novos Pacientes por Dia
-                </CardTitle>
-                <CardDescription>
-                    Quantidade diária de novos pacientes cadastrados
-                </CardDescription>
+        <Card className="col-span-6 border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-card rounded-xl overflow-hidden transition-all duration-500">
+            <CardHeader className="flex flex-row items-center justify-between px-7 pt-7 pb-4">
+                <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-inner">
+                        <BarChart3 className="size-5" />
+                    </div>
+                    <div className="flex flex-col">
+                        <CardTitle className="text-sm font-bold tracking-tight text-foreground/90 uppercase">
+                            Novos Pacientes
+                        </CardTitle>
+                        <CardDescription className="text-[11px] font-medium text-muted-foreground/80">
+                            Fluxo diário de cadastros
+                        </CardDescription>
+                    </div>
+                </div>
             </CardHeader>
 
-            <CardContent className="px-2 sm:p-6">
-                <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                    <BarChart data={chartData} margin={{ left: 12, right: 12 }}>
-                        <CartesianGrid vertical={false} strokeDasharray="3 3" />
+            <CardContent className="px-5 pb-7">
+                {isLoading ? (
+                    <div className="flex items-end gap-3 h-[220px] w-full px-2">
+                        {[...Array(7)].map((_, i) => (
+                            <Skeleton
+                                key={i}
+                                className="w-full bg-muted/40 rounded-t-lg"
+                                style={{ height: `${20 + Math.random() * 60}%` }}
+                            />
+                        ))}
+                    </div>
+                ) : isError ? (
+                    <div className="flex h-[220px] flex-col items-center justify-center rounded-xl bg-destructive/5 text-destructive gap-2 border border-destructive/10">
+                        <Info className="size-5" />
+                        <span className="text-xs font-semibold">Erro ao carregar métricas</span>
+                    </div>
+                ) : chartData.length === 0 || chartData.every(d => d.newPatients === 0) ? (
+                    <div className="flex h-[220px] flex-col items-center justify-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                            <CircleX className="h-6 w-6 opacity-50" />
+                        </div>
+                        <div className="text-center space-y-1">
+                            <p className="font-medium">Nenhuma sessão encontrada</p>
+                            <p className="text-sm text-muted-foreground">Não houveram atendimentos concluídos neste período.</p>
+                        </div>
+                    </div>
+                ) : (
+                    <ChartContainer config={chartConfig} className="h-[220px] w-full">
+                        <BarChart data={chartData} margin={{ top: 10, left: -25, right: 10, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="newPatientsGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="var(--primary)" stopOpacity={1} />
+                                    <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.6} />
+                                </linearGradient>
+                            </defs>
 
-                        <YAxis
-                            domain={[0, yAxisMax]}
-                            tickLine={false}
-                            axisLine={false}
-                            width={30}
-                        />
+                            <CartesianGrid vertical={false} stroke="var(--border)" strokeOpacity={0.6} />
 
-                        <XAxis
-                            dataKey="date"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={8}
-                            minTickGap={20}
-                            tickFormatter={(value) =>
-                                format(new Date(value), "dd/MM", { locale: ptBR })
-                            }
-                        />
+                            <XAxis
+                                dataKey="date"
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={15}
+                                fontSize={10}
+                                fontWeight={700}
+                                className="fill-muted-foreground/70 uppercase"
+                                tickFormatter={(value) => format(new Date(value), "dd MMM", { locale: ptBR })}
+                            />
 
-                        <ChartTooltip
-                            content={
-                                <ChartTooltipContent
-                                    className="w-40"
-                                    nameKey="newPatients"
-                                    labelFormatter={(value) =>
-                                        format(new Date(value), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
-                                    }
-                                />
-                            }
-                        />
+                            <YAxis
+                                domain={[0, yAxisMax]}
+                                tickLine={false}
+                                axisLine={false}
+                                fontSize={10}
+                                fontWeight={700}
+                                className="fill-muted-foreground/70"
+                                allowDecimals={false}
+                            />
 
+                            <ChartTooltip
+                                cursor={{ fill: 'var(--primary)', opacity: 0.04 }}
+                                content={
+                                    <ChartTooltipContent
+                                        className="border-none shadow-2xl bg-card/95 backdrop-blur-sm rounded-lg"
+                                        labelFormatter={(value) => format(new Date(value), "dd 'de' MMMM", { locale: ptBR })}
+                                    />
+                                }
+                            />
 
-                        <Bar
-                            dataKey="newPatients"
-                            fill="var(--chart-1)"
-                            radius={[4, 4, 0, 0]}
-                            name="Novos Pacientes"
-                        />
-                    </BarChart>
-                </ChartContainer>
+                            <Bar
+                                dataKey="newPatients"
+                                fill="url(#newPatientsGradient)"
+                                radius={[6, 6, 2, 2]}
+                                barSize={24}
+                            />
+                        </BarChart>
+                    </ChartContainer>
+                )}
+
+                <div className="mt-6 flex items-center justify-between border-t border-border/40 pt-5 px-2">
+                    <div className="flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                            Fluxo de Entrada
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-muted-foreground/50">
+                        <Info size={12} />
+                        <span className="text-[10px] font-bold uppercase tracking-tight">
+                            Período Selecionado
+                        </span>
+                    </div>
+                </div>
             </CardContent>
         </Card>
     )

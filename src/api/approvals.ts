@@ -6,8 +6,13 @@ export interface PendingPsychologist {
   firstName: string
   lastName: string
   email: string
-  crp: string
+  crp: string | null
+  cpf: string
+  phoneNumber: string
+  expertise: string | null
+  dateOfBirth: string
   createdAt: string
+  profileImageUrl?: string
 }
 
 export interface GetApprovalsResponse {

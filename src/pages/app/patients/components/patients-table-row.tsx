@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Trash2, UserPen, Mars, Venus, Users, CircleUser, CalendarDays, Phone, Fingerprint } from "lucide-react"
+import { Search, Trash2, UserPen, Mars, Venus, Users, CircleUser, CalendarDays, Phone, Fingerprint, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -40,18 +40,17 @@ interface PatientsTableProps {
 
 export function PatientsTable({ patients, isLoading, perPage = 10 }: PatientsTableProps) {
     return (
-        <div className="rounded-md border bg-background shadow-sm">
+        <div className="rounded-xl border bg-background shadow-sm overflow-hidden">
             <Table>
                 <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
                         <TableHead className="w-[50px]"></TableHead>
-                        <TableHead>Paciente</TableHead>
-                        <TableHead>CPF</TableHead>
-                        <TableHead>Telefone</TableHead>
-                        <TableHead>Idade / Nasc.</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Gênero</TableHead>
-                        <TableHead className="text-right pr-6">Ações</TableHead>
+                        <TableHead className="text-xs uppercase tracking-wider font-semibold">Paciente</TableHead>
+                        <TableHead className="text-xs uppercase tracking-wider font-semibold">Documento</TableHead>
+                        <TableHead className="text-xs uppercase tracking-wider font-semibold">Contato</TableHead>
+                        <TableHead className="text-xs uppercase tracking-wider font-semibold">Idade / Nasc.</TableHead>
+                        <TableHead className="text-xs uppercase tracking-wider font-semibold">Gênero</TableHead>
+                        <TableHead className="text-right pr-6 text-xs uppercase tracking-wider font-semibold">Ações</TableHead>
                     </TableRow>
                 </TableHeader>
 
@@ -59,12 +58,12 @@ export function PatientsTable({ patients, isLoading, perPage = 10 }: PatientsTab
                     {isLoading ? (
                         Array.from({ length: perPage }).map((_, i) => (
                             <TableRow key={i}>
-                                <TableHead colSpan={8}>
+                                <TableCell colSpan={7}>
                                     <div className="flex items-center gap-4">
                                         <Skeleton className="h-10 w-10 rounded-full" />
                                         <Skeleton className="h-4 w-[200px]" />
                                     </div>
-                                </TableHead>
+                                </TableCell>
                             </TableRow>
                         ))
                     ) : patients.length > 0 ? (
@@ -73,12 +72,14 @@ export function PatientsTable({ patients, isLoading, perPage = 10 }: PatientsTab
                         ))
                     ) : (
                         <TableRow>
-                            <TableHead colSpan={8} className="text-center text-muted-foreground py-10">
-                                <div className="flex flex-col items-center justify-center gap-2">
-                                    <Users className="h-8 w-8 text-muted-foreground/50" />
-                                    <p>Nenhum paciente cadastrado.</p>
+                            <TableCell colSpan={7} className="text-center text-muted-foreground py-20">
+                                <div className="flex flex-col items-center justify-center gap-3">
+                                    <div className="p-4 rounded-full bg-muted">
+                                        <Users className="h-10 w-10 text-muted-foreground/40" />
+                                    </div>
+                                    <p className="text-sm font-medium">Nenhum paciente cadastrado.</p>
                                 </div>
-                            </TableHead>
+                            </TableCell>
                         </TableRow>
                     )}
                 </TableBody>
@@ -109,15 +110,9 @@ function PatientsTableRowItem({ patient }: { patient: Patient }) {
     })
 
     const patientDataForEdit: UpdatePatientData = {
-        id,
-        firstName,
-        lastName,
-        email,
-        cpf,
-        phoneNumber,
+        id, firstName, lastName, email, cpf, phoneNumber,
         dateOfBirth: new Date(dateOfBirth),
-        gender,
-        role: role || "PATIENT",
+        gender, role: role || "PATIENT",
         isActive: status === "Ativo",
         profileImageUrl
     }
@@ -126,144 +121,129 @@ function PatientsTableRowItem({ patient }: { patient: Patient }) {
         MASCULINE: {
             label: "Masculino",
             icon: Mars,
-            className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800",
+            className: "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400",
         },
         FEMININE: {
             label: "Feminino",
             icon: Venus,
-            className: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800",
+            className: "bg-rose-500/10 text-rose-600 border-rose-500/20 dark:text-rose-400",
         },
         OTHER: {
             label: "Outro",
             icon: Users,
-            className: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-900/20 dark:text-violet-400 dark:border-violet-800",
+            className: "bg-violet-500/10 text-violet-600 border-violet-500/20 dark:text-violet-400",
         },
     }
 
     const currentGender = genderConfig[gender as keyof typeof genderConfig] || {
         label: "N/A",
         icon: CircleUser,
-        className: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+        className: "bg-muted text-muted-foreground border-transparent"
     }
 
     const GenderIcon = currentGender.icon
 
-    const mockSessions = [
-        { date: "10/10/2025", theme: "Ansiedade e rotina", duration: "50 min", status: "Pendente" },
-        { date: "03/10/2025", theme: "Autoestima e autoconfiança", duration: "55 min", status: "Concluída" },
-    ];
-
-    const patientDataForDetails = {
-        id, firstName, lastName, cpf, email, phoneNumber,
-        status: status === "Ativo" ? "active" : "inactive",
-        sessions: mockSessions,
-    }
-
     return (
-        <TableRow className="group cursor-default hover:bg-muted/50 transition-colors">
-            <TableCell>
-                <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-                    {isDetailsOpen && (
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Prontuário Digital</DialogTitle>
-                                <DialogDescription>Dados completos do paciente.</DialogDescription>
-                            </DialogHeader>
-                            <PatientsDetails patient={patientDataForDetails as any} />
-                        </DialogContent>
-                    )}
-                </Dialog>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground opacity-50 group-hover:opacity-100" onClick={() => setIsDetailsOpen(true)}>
-                    <Search className="h-4 w-4" />
-                </Button>
+        <TableRow className="group hover:bg-muted/50 transition-all duration-200 border-l-2 border-l-transparent hover:border-l-primary/50">
+            {/* SEARCH / DETAILS */}
+            <TableCell className="w-[50px]">
+                <TooltipProvider delayDuration={100}>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-lg opacity-60 group-hover:opacity-100 group-hover:bg-primary/10 transition-all"
+                                onClick={() => setIsDetailsOpen(true)}
+                            >
+                                <Search className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="text-xs">Prontuário Digital</TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             </TableCell>
 
+            {/* AVATAR & NAME */}
             <TableCell>
                 <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9 border">
-                        <AvatarImage src={profileImageUrl} alt={`${firstName} ${lastName}`} />
-                        <AvatarFallback className="font-medium text-xs bg-primary/10 text-primary">
+                    <Avatar className="h-10 w-10 ring-2 ring-background shadow-sm border">
+                        <AvatarImage src={profileImageUrl} />
+                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-semibold">
                             {getInitials(firstName, lastName)}
                         </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                        <span className="font-medium text-sm text-foreground">
+                        <span className="font-semibold text-sm leading-tight text-foreground">
                             {firstName} {lastName}
                         </span>
+                        <span className="text-[11px] text-muted-foreground/70">Paciente</span>
                     </div>
                 </div>
             </TableCell>
 
+            {/* CPF */}
             <TableCell>
-                <div className="flex items-center gap-2 text-muted-foreground" title="CPF">
-                    <Fingerprint className="h-3.5 w-3.5 opacity-70" />
-                    <span className="font-mono text-xs">{formatCPF(cpf)}</span>
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50 border border-transparent group-hover:border-muted-foreground/10 transition-colors">
+                    <Fingerprint className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="font-mono text-xs font-medium">{formatCPF(cpf)}</span>
                 </div>
             </TableCell>
 
+            {/* CONTACT INFO */}
             <TableCell>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                    <Phone className="h-3.5 w-3.5 opacity-70" />
-                    <span className="font-mono text-xs">{formatPhone(phoneNumber)}</span>
+                <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1.5">
+                        <Phone className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs font-medium tabular-nums">{formatPhone(phoneNumber)}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 opacity-70">
+                        <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <span className="text-[10px] truncate max-w-[140px]">{email}</span>
+                    </div>
                 </div>
             </TableCell>
 
+            {/* AGE / BIRTHDATE */}
             <TableCell>
-                <div className="flex flex-col justify-center">
-                    <span className="text-sm font-medium">
+                <div className="flex flex-col">
+                    <span className="text-sm font-semibold tabular-nums tracking-tight">
                         {formatAGE(dateOfBirth)} anos
                     </span>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <CalendarDays className="h-3 w-3" />
+                    <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1 uppercase font-medium">
+                        <CalendarDays className="h-2.5 w-2.5" />
                         {new Date(dateOfBirth).toLocaleDateString("pt-BR")}
-                    </div>
+                    </span>
                 </div>
             </TableCell>
 
-            <TableCell className="text-muted-foreground text-sm max-w-[150px] truncate" title={email}>
-                {email}
-            </TableCell>
-
+            {/* GENDER */}
             <TableCell>
                 <Badge
                     variant="outline"
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold border ${currentGender.className}`}
+                    className={`h-[20px] px-2 text-[10px] font-bold uppercase tracking-tight gap-1.5 ${currentGender.className}`}
                 >
                     <GenderIcon className="h-3 w-3" />
                     {currentGender.label}
                 </Badge>
             </TableCell>
 
+            {/* ACTIONS */}
             <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-1">
-                    <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-                        {isEditOpen && <EditPatient patient={patientDataForEdit} onClose={() => setIsEditOpen(false)} />}
-                    </Dialog>
-
-                    <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-                        {isDeleteOpen && (
-                            <DeletePatientDialog
-                                fullName={`${firstName} ${lastName}`}
-                                isDeleting={isDeleting}
-                                onClose={() => setIsDeleteOpen(false)}
-                                onDelete={async () => await deletePatientFn(id)}
-                            />
-                        )}
-                    </Dialog>
-
-                    <TooltipProvider delayDuration={200}>
+                <div className="flex justify-end gap-2">
+                    <TooltipProvider delayDuration={100}>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
                                     size="icon"
                                     variant="ghost"
                                     onClick={() => setIsEditOpen(true)}
-                                    className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50"
+                                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30"
                                 >
                                     <UserPen className="h-4 w-4" />
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Editar dados</TooltipContent>
+                            <TooltipContent className="text-xs">Editar</TooltipContent>
                         </Tooltip>
 
                         <Tooltip>
@@ -272,16 +252,44 @@ function PatientsTableRowItem({ patient }: { patient: Patient }) {
                                     size="icon"
                                     variant="ghost"
                                     onClick={() => setIsDeleteOpen(true)}
-                                    className="h-8 w-8 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                                 >
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Excluir registro</TooltipContent>
+                            <TooltipContent className="text-xs">Excluir</TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                 </div>
             </TableCell>
+
+            {/* DIALOGS */}
+            <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+                {isDetailsOpen && (
+                    <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle>Prontuário Digital</DialogTitle>
+                            <DialogDescription>Dados completos e histórico do paciente.</DialogDescription>
+                        </DialogHeader>
+                        <PatientsDetails patient={{ ...p, status: status === "Ativo" ? "active" : "inactive", sessions: [] } as any} />
+                    </DialogContent>
+                )}
+            </Dialog>
+
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                {isEditOpen && <EditPatient patient={patientDataForEdit} onClose={() => setIsEditOpen(false)} />}
+            </Dialog>
+
+            <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+                {isDeleteOpen && (
+                    <DeletePatientDialog
+                        fullName={`${firstName} ${lastName}`}
+                        isDeleting={isDeleting}
+                        onClose={() => setIsDeleteOpen(false)}
+                        onDelete={async () => await deletePatientFn(id)}
+                    />
+                )}
+            </Dialog>
         </TableRow>
     )
 }

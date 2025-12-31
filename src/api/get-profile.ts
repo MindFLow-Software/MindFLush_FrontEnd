@@ -23,7 +23,21 @@ interface GetProfileApiResponse {
 }
 
 export async function getProfile(): Promise<GetProfileResponse> {
-const response = await api.get<GetProfileApiResponse>('/psychologist/me')
+  const response = await api.get<GetProfileApiResponse>('/psychologist/me')
+  const psychologist = response.data.psychologist
 
-  return response.data.psychologist
+  if (psychologist) {
+    const storedUser = localStorage.getItem('user')
+    const currentUser = storedUser ? JSON.parse(storedUser) : {}
+
+    const updatedUser = {
+      ...currentUser,
+      ...psychologist,
+      role: psychologist.role
+    }
+
+    localStorage.setItem('user', JSON.stringify(updatedUser))
+  }
+
+  return psychologist
 }

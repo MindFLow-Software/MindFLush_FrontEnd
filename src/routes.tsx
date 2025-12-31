@@ -1,5 +1,4 @@
 import { createBrowserRouter, Outlet, redirect, Navigate, useLocation } from 'react-router-dom'
-
 import { AppLayout } from './pages/_layouts/app'
 import { AuthLayout } from './pages/_layouts/auth'
 import { PatientsList } from './pages/app/patients/patients-list'
@@ -12,6 +11,62 @@ import { AppointmentsList } from './pages/app/appointment/appointment-list'
 import { MockPsychologistProfilePage } from './pages/app/account/account'
 import { LandingPage } from './pages/landing-page/landing-page'
 import { DashboardFinance } from './pages/app/finance/dashboard-finance'
+import { AdminApprovalsPage } from './pages/app/admin/approvals'
+
+const getUser = () => {
+  const userData = localStorage.getItem('user')
+  if (!userData || userData === 'undefined' || userData === 'null') return null
+
+  try {
+    const user = JSON.parse(userData)
+    const roleValue = typeof user.role === 'object' && user.role !== null
+      ? user.role.name
+      : user.role
+
+    return {
+      ...user,
+      role: roleValue ? String(roleValue).trim().toUpperCase() : undefined
+    }
+  } catch {
+    return null
+  }
+}
+
+const authLoader = () => {
+  if (!localStorage.getItem('token')) {
+    return redirect('/sign-in')
+  }
+  return null
+}
+
+const adminLoader = () => {
+  const user = getUser()
+  if (!user || user.role !== 'SUPER_ADMIN') {
+    return redirect('/dashboard')
+  }
+  return null
+}
+
+interface ProtectedRouteProps {
+  children: React.ReactNode
+  allowedRole?: string
+}
+
+const ProtectedRoute = ({ children, allowedRole }: ProtectedRouteProps) => {
+  const isAuthenticated = !!localStorage.getItem('token')
+  const user = getUser()
+  const location = useLocation()
+
+  if (!isAuthenticated) {
+    return <Navigate to="/sign-in" state={{ from: location }} replace />
+  }
+
+  if (allowedRole && user?.role !== allowedRole) {
+    return <Navigate to="/dashboard" replace />
+  }
+
+  return <>{children}</>
+}
 
 function LandingLayout() {
   return (
@@ -22,63 +77,26 @@ function LandingLayout() {
     </div>
   )
 }
-const authLoader = () => {
-  const isAuthenticated = !!localStorage.getItem('token')
-  if (!isAuthenticated) {
-    return redirect('/sign-in')
-  }
-  return null
-}
-
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const isAuthenticated = !!localStorage.getItem('token');
-  const location = useLocation();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/sign-in" state={{ from: location }} replace />;
-  }
-
-  return <>{children}</>;
-};
 
 export const router = createBrowserRouter([
-  // GRUPO 1: Landing Page (Com Header)
   {
     path: '/',
     element: <LandingLayout />,
     errorElement: <NotFound />,
     children: [
-      {
-        path: '/',
-        element: <LandingPage />,
-      },
+      { path: '/', element: <LandingPage /> },
     ],
   },
-
-  // GRUPO 2: Autenticação
   {
     path: '/',
     element: <AuthLayout />,
     children: [
-      {
-        path: '/sign-in',
-        element: <SignIn />,
-      },
-      {
-        path: '/sign-up',
-        element: <SignUp />,
-      },
+      { path: '/sign-in', element: <SignIn /> },
+      { path: '/sign-up', element: <SignUp /> },
     ],
   },
-
-  // GRUPO 3: Aplicação Logada
   {
     path: '/',
-
     loader: authLoader,
     element: (
       <ProtectedRoute>
@@ -86,33 +104,21 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
+      { path: '/dashboard', element: <Dashboard /> },
+      { path: '/dashboard-finance', element: <DashboardFinance /> },
+      { path: '/patients-list', element: <PatientsList /> },
+      { path: '/video-room', element: <AppointmentsRoom /> },
+      { path: '/appointment', element: <AppointmentsList /> },
+      { path: '/account', element: <MockPsychologistProfilePage /> },
+      { path: '/perfil', element: <MockPsychologistProfilePage /> },
       {
-        path: '/dashboard',
-        element: <Dashboard />,
-      },
-      {
-        path: '/dashboard-finance',
-        element: <DashboardFinance />,
-      },
-      {
-        path: '/patients-list',
-        element: <PatientsList />,
-      },
-      {
-        path: '/video-room',
-        element: <AppointmentsRoom />,
-      },
-      {
-        path: '/appointment',
-        element: <AppointmentsList />,
-      },
-      {
-        path: '/account',
-        element: <MockPsychologistProfilePage />,
-      },
-      {
-        path: '/perfil',
-        element: <MockPsychologistProfilePage />,
+        path: '/approvals',
+        loader: adminLoader,
+        element: (
+          <ProtectedRoute allowedRole="SUPER_ADMIN">
+            <AdminApprovalsPage />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

@@ -9,9 +9,9 @@ import {
   Users2,
   Wallet,
   CalendarCheck,
+  ShieldCheck,
 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
-
 
 import {
   Sidebar,
@@ -26,65 +26,82 @@ import { NavMain } from "./nav-main"
 import { NavProjects } from "./nav-projects"
 import { NavUser } from "./nav-user"
 
-const navMain = [
-  {
-    title: "Home",
-    url: "#",
-    icon: Home,
-    items: [
-      { title: "Dashboard", url: "/dashboard" },
-    ],
-  },
-  {
-    title: "Pacientes",
-    url: "#",
-    icon: Users2,
-    items: [
-      { title: "Cadastro de Pacientes", url: "/patients-list" },
-      { title: "Docs de Pacientes", url: "/patients-list" },
-    ],
-  },
-  {
-    title: "Agendamentos",
-    url: "#",
-    icon: CalendarCheck,
-    items: [
-      { title: "Meus Agendamentos", url: "/appointment" },
-      { title: "Sala de Atendimento", url: "/video-room" },
-      { title: "Histórico de Sessões", url: "#" },
-    ],
-  },
-  {
-    title: "Financeiro",
-    url: "#",
-    icon: Wallet,
-    items: [
-      { title: "Pagamentos", url: "/dashboard-finance" },
-      { title: "Cobrança", url: "#" },
-      { title: "Cupons", url: "#" },
-      { title: "Saques", url: "#" },
-    ],
-  },
-]
-
-const projects = [
-  { name: "Pomodoro", url: "#", icon: Clock },
-  {
-    name: "ChatBot MindFLush",
-    url: "https://cdn.botpress.cloud/webchat/v3.3/shareable.html?configUrl=https://files.bpcontent.cloud/2025/11/24/22/20251124224302-TGJFOW69.json",
-    icon: BrainCircuit,
-  },
-]
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: profile, isLoading } = useQuery<GetProfileResponse | null>({
     queryKey: ["psychologist-profile"],
     queryFn: getProfile,
     retry: false,
+    staleTime: 1000 * 60 * 5, // Cache de 5 minutos para performance
   })
+
+  const projects = [
+    { name: "Pomodoro", url: "#", icon: Clock },
+    {
+      name: "ChatBot MindFLush",
+      url: "https://cdn.botpress.cloud/webchat/v3.3/shareable.html?configUrl=https://files.bpcontent.cloud/2025/11/24/22/20251124224302-TGJFOW69.json",
+      icon: BrainCircuit,
+    },
+  ]
+
+  const filteredNavMain = React.useMemo(() => {
+    const baseNav = [
+      {
+        title: "Home",
+        url: "#",
+        icon: Home,
+        items: [{ title: "Dashboard", url: "/dashboard" }],
+      },
+      {
+        title: "Pacientes",
+        url: "#",
+        icon: Users2,
+        items: [
+          { title: "Cadastro de Pacientes", url: "/patients-list" },
+          { title: "Docs de Pacientes", url: "/patients-list" },
+        ],
+      },
+      {
+        title: "Agendamentos",
+        url: "#",
+        icon: CalendarCheck,
+        items: [
+          { title: "Meus Agendamentos", url: "/appointment" },
+          { title: "Sala de Atendimento", url: "/video-room" },
+          { title: "Histórico de Sessões", url: "#" },
+        ],
+      },
+      {
+        title: "Financeiro",
+        url: "#",
+        icon: Wallet,
+        items: [
+          { title: "Pagamentos", url: "/dashboard-finance" },
+          { title: "Cobrança", url: "#" },
+          { title: "Cupons", url: "#" },
+          { title: "Saques", url: "#" },
+        ],
+      },
+    ]
+
+    const userRole = (profile?.role as string)?.toUpperCase()
+
+    if (userRole === "SUPER_ADMIN") {
+      baseNav.push({
+        title: "Administração",
+        url: "#",
+        icon: ShieldCheck,
+        items: [
+          { title: "Aprovações Pendentes", url: "/approvals" },
+        ],
+      })
+    }
+
+    return baseNav
+  }, [profile])
 
   const teams = React.useMemo(() => {
     const baseProfile = profile || { firstName: "...", lastName: "...", email: "..." }
+    const isRoot = (profile?.role as string)?.toUpperCase() === "SUPER_ADMIN"
 
     return [
       {
@@ -92,7 +109,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         firstName: baseProfile.firstName,
         lastName: baseProfile.lastName,
         logo: GalleryVerticalEnd,
-        plan: "Plano Enterprise",
+        plan: isRoot ? "Acesso Root" : "Plano Enterprise",
       },
     ]
   }, [profile])
@@ -104,7 +121,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={navMain} />
+        <NavMain items={filteredNavMain} />
         <NavProjects projects={projects} />
       </SidebarContent>
 

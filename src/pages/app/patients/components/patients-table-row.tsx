@@ -159,7 +159,7 @@ function PatientsTableRowItem({ patient }: { patient: Patient }) {
                                 <Search className="h-4 w-4" />
                             </Button>
                         </TooltipTrigger>
-                        <TooltipContent side="right" className="text-xs">Prontuário Digital</TooltipContent>
+                        <TooltipContent side="right" className="text-xs">Mais informações</TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
             </TableCell>
@@ -271,7 +271,7 @@ function PatientsTableRowItem({ patient }: { patient: Patient }) {
                             <DialogTitle>Prontuário Digital</DialogTitle>
                             <DialogDescription>Dados completos e histórico do paciente.</DialogDescription>
                         </DialogHeader>
-                        <PatientsDetails patient={{ ...p, status: status === "Ativo" ? "active" : "inactive", sessions: [] } as any} />
+                        <PatientsDetails patientId={p.id} />
                     </DialogContent>
                 )}
             </Dialog>

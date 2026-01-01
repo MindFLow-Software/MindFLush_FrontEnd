@@ -5,7 +5,7 @@ import { Calendar, dateFnsLocalizer, Views, type View } from "react-big-calendar
 import { format, parse, startOfWeek, getDay } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import "react-big-calendar/lib/css/react-big-calendar.css"
-import { ChevronLeft, ChevronRight, } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -18,7 +18,6 @@ import {
 import type { Appointment } from "@/api/get-appointment"
 import { cn } from "@/lib/utils"
 
-// 1. Configuração do Localizador
 const locales = {
     "pt-BR": ptBR,
 }
@@ -31,7 +30,6 @@ const localizer = dateFnsLocalizer({
     locales,
 })
 
-// 2. Interfaces
 interface CalendarEvent {
     id: string
     title: string
@@ -46,7 +44,6 @@ interface CalendarViewProps {
     onSelectEvent: (appointment: Appointment) => void
 }
 
-// 3. Toolbar Customizada (Estilo Google: Limpo e Funcional)
 const CustomToolbar = (toolbar: any) => {
     const goToBack = () => toolbar.onNavigate("PREV")
     const goToNext = () => toolbar.onNavigate("NEXT")
@@ -113,7 +110,6 @@ const CustomToolbar = (toolbar: any) => {
     )
 }
 
-// 4. Componente de Evento Customizado (Minimalista)
 const CustomEvent = ({ event }: { event: CalendarEvent }) => {
     return (
         <div className="h-full w-full px-1.5 py-0.5 flex flex-col overflow-hidden leading-tight hover:brightness-95 transition-all">
@@ -132,12 +128,16 @@ export function CalendarView({ appointments, onSelectSlot, onSelectEvent }: Cale
     const events = useMemo((): CalendarEvent[] => {
         return appointments.map((apt) => {
             const startDate = new Date(apt.scheduledAt)
-            // Se não tiver duração definida, assume 1h
             const endDate = new Date(startDate.getTime() + 60 * 60 * 1000)
+
+            // ✅ CORREÇÃO: Usando Optional Chaining (?.) e fallback de texto
+            const patientName = apt.patient
+                ? `${apt.patient.firstName} ${apt.patient.lastName}`
+                : "Paciente Indisponível"
 
             return {
                 id: apt.id,
-                title: `${apt.patient.firstName} ${apt.patient.lastName}`,
+                title: patientName,
                 start: startDate,
                 end: endDate,
                 resource: apt,
@@ -155,55 +155,47 @@ export function CalendarView({ appointments, onSelectSlot, onSelectEvent }: Cale
                 view={view}
                 onView={setView}
                 culture="pt-BR"
-
                 components={{
                     toolbar: CustomToolbar,
                     event: CustomEvent,
                 }}
-
                 step={30}
                 timeslots={2}
                 selectable
                 onSelectSlot={({ start }) => onSelectSlot(start)}
                 onSelectEvent={(event) => onSelectEvent(event.resource)}
-
-                // Estilo das células do calendário (dias)
                 dayPropGetter={(date) => {
                     const isToday = new Date().toDateString() === date.toDateString();
                     return {
                         className: cn(
                             "bg-white dark:bg-zinc-950 transition-colors cursor-pointer",
-                            // Destaque sutil para a coluna do dia atual (Estilo Google)
                             isToday ? "bg-blue-50/30 dark:bg-blue-900/10" : "hover:bg-gray-50 dark:hover:bg-zinc-900"
                         )
                     }
                 }}
-
-                // Estilo dos Agendamentos (Eventos)
                 eventPropGetter={(event) => {
-                    let backgroundColor = "#039be5" // Padrão: Azul Pavão
-                    let borderLeft = "4px solid #0277bd" // Borda lateral mais escura
+                    let backgroundColor = "#039be5"
+                    let borderLeft = "4px solid #0277bd"
 
-                    // Lógica de Cores Semânticas
                     switch (event.resource.status) {
                         case 'SCHEDULED':
-                            backgroundColor = "#039be5" // Azul
+                            backgroundColor = "#039be5"
                             borderLeft = "4px solid #0277bd"
                             break;
                         case 'ATTENDING':
-                            backgroundColor = "#f6bf26" // Amarelo
+                            backgroundColor = "#f6bf26"
                             borderLeft = "4px solid #f09300"
                             break;
                         case 'FINISHED':
-                            backgroundColor = "#33b679" // Verde
+                            backgroundColor = "#33b679"
                             borderLeft = "4px solid #0b8043"
                             break;
                         case 'CANCELED':
-                            backgroundColor = "#d50000" // Vermelho
+                            backgroundColor = "#d50000"
                             borderLeft = "4px solid #b71c1c"
                             break;
                         case 'NOT_ATTEND':
-                            backgroundColor = "#616161" // Grafite
+                            backgroundColor = "#616161"
                             borderLeft = "4px solid #202124"
                             break;
                     }
@@ -212,7 +204,7 @@ export function CalendarView({ appointments, onSelectSlot, onSelectEvent }: Cale
                         style: {
                             backgroundColor,
                             border: "none",
-                            borderLeft: borderLeft, // Borda lateral de destaque
+                            borderLeft: borderLeft,
                             borderRadius: "4px",
                             color: "white",
                             fontSize: "12px",

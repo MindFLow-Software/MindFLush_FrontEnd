@@ -12,18 +12,13 @@ export interface GetPatientDetailsResponse {
     sessions: Array<{
       id: string
       date: string
-      theme: string // 🔹 Este campo mapeia para o 'diagnosis' do backend
+      theme: string
       duration: string
-      status: 'Concluída' | 'Pendente' // 🔹 Status formatado pelo backend
+      status: 'Concluída' | 'Pendente'
     }>
   }
 }
 
-/**
- * Busca os detalhes completos do paciente.
- * A rota /details no backend já deve retornar o objeto formatado
- * com o diagnóstico (diagnosis) mapeado para tema (theme).
- */
 export async function getPatientDetails(patientId: string) {
   const response = await api.get<GetPatientDetailsResponse>(
     `/patients/${patientId}/details`

@@ -48,7 +48,7 @@ export function AppointmentsRoom() {
         <>
             <Helmet title="Sala de Atendimento" />
 
-            <div className="w-full max-w-7xl mx-auto space-y-6 py-6 px-4">
+            <div className="flex flex-col gap-4 mt-6">
                 <div className="flex justify-center">
                     <SessionTimer isActive={isSessionActive} />
                 </div>

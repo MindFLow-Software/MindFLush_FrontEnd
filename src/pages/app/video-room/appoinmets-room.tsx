@@ -1,37 +1,31 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useCallback, useEffect } from "react"
 import { Helmet } from "react-helmet-async"
-import { useQuery } from "@tanstack/react-query"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { getScheduledAppointment } from "@/api/get-scheduled-appointment"
 import { AppointmentAddForm } from "./components/appointment-add-form"
 import { useHeaderStore } from "@/hooks/use-header-store"
 import { SessionTimer } from "./components/SessionTimer"
+import { FileText } from "lucide-react"
 
 export function AppointmentsRoom() {
     const { setTitle } = useHeaderStore()
 
-    const [selectedPatientId, setSelectedPatientId] = useState("")
+    const [selectedAppointmentId, setSelectedAppointmentId] = useState("")
     const [notes, setNotes] = useState("")
     const [isSessionActive, setIsSessionActive] = useState(false)
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
 
     useEffect(() => {
-        setTitle('Sala de Atendimento')
+        setTitle("Sala de Atendimento")
     }, [setTitle])
 
-    const { data: activeAppointmentData } = useQuery({
-        queryKey: ['activeAppointment', selectedPatientId],
-        queryFn: () => getScheduledAppointment(selectedPatientId),
-        enabled: !!selectedPatientId && !isSessionActive,
-        retry: false,
-    })
-
-    const currentAppointmentId = activeAppointmentData?.appointmentId || "";
+    const currentAppointmentId = selectedAppointmentId
 
     const handleSessionStarted = useCallback((sessionId: string) => {
         setCurrentSessionId(sessionId)
@@ -41,74 +35,97 @@ export function AppointmentsRoom() {
     const handleSessionFinished = useCallback(() => {
         setIsSessionActive(false)
         setCurrentSessionId(null)
-        setSelectedPatientId("")
+        setSelectedAppointmentId("")
         setNotes("")
     }, [])
 
-    const MAX_LENGTH = 8000;
+    const MAX_LENGTH = 8000
     const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setNotes(e.target.value.substring(0, MAX_LENGTH));
-    };
+        setNotes(e.target.value.substring(0, MAX_LENGTH))
+    }
 
     return (
         <>
             <Helmet title="Sala de Atendimento" />
 
-            <div className="flex flex-col gap-4 mt-4">
-
-                {/* <div className="grid grid-cols-1">
-                    <VideoRoomMock />
-                </div> */}
-                <div >
+            <div className="w-full max-w-7xl mx-auto space-y-6 py-6 px-4">
+                <div className="flex justify-center">
                     <SessionTimer isActive={isSessionActive} />
                 </div>
-                <div className="grid grid-cols-1">
-                    <AppointmentAddForm
-                        selectedPatientId={selectedPatientId}
-                        onSelectPatient={setSelectedPatientId}
-                        currentAppointmentId={currentAppointmentId}
-                        currentSessionId={currentSessionId}
-                        isSessionActive={isSessionActive}
-                        onSessionStarted={handleSessionStarted}
-                        onSessionFinished={handleSessionFinished}
-                        notes={notes}
-                    />
-                </div>
 
-                <Card className={`mt-2 transition-all duration-300 ${!isSessionActive ? 'opacity-50 pointer-events-none' : 'opacity-100 ring-1 ring-primary/20'}`}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                        <div>
-                            <CardTitle>Anotações e Evolução</CardTitle>
-                            <CardDescription>O histórico é registrado automaticamente ao finalizar.</CardDescription>
+                <Card
+                    className={`
+                    transition-all duration-300 ease-in-out
+                    ${!isSessionActive
+                            ? "opacity-40 grayscale pointer-events-none"
+                            : "opacity-100 shadow-sm border-primary/10"
+                        }
+                `}
+                >
+                    <CardHeader className="space-y-1 pb-4">
+                        <div className="flex items-center gap-2">
+                            <FileText
+                                className={`h-5 w-5 transition-colors ${isSessionActive ? "text-primary" : "text-muted-foreground"}`}
+                            />
+                            <CardTitle className="text-xl">Anotações da Sessão</CardTitle>
                         </div>
+                        <CardDescription className="text-sm">
+                            {isSessionActive
+                                ? "Registre os detalhes e evolução do atendimento"
+                                : "Inicie uma sessão para registrar anotações"}
+                        </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
+
+                    <CardContent className="space-y-3">
+                        <div className="relative">
                             <Textarea
                                 id="notes"
-                                placeholder="Descreva aqui os detalhes da sessão..."
+                                placeholder="Descreva os sintomas, observações, diagnóstico, tratamento e evolução do paciente..."
                                 value={notes}
                                 onChange={handleNotesChange}
                                 disabled={!isSessionActive}
-                                rows={6}
-                                className="w-full resize-none bg-background focus-visible:ring-primary"
+                                rows={8}
+                                className="w-full resize-none bg-muted/30 border-border/50 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all text-sm leading-relaxed"
                             />
-                            <div className="text-xs text-muted-foreground text-right tabular-nums">
-                                {notes.length.toLocaleString()}/{MAX_LENGTH.toLocaleString()} caracteres
+                            <div
+                                className={`
+                                absolute bottom-3 right-3 
+                                text-xs font-medium tabular-nums px-2 py-1 rounded-md
+                                transition-colors
+                                ${notes.length > MAX_LENGTH * 0.9
+                                        ? "bg-amber-500/10 text-amber-600"
+                                        : "bg-background/80 text-muted-foreground"
+                                    }
+                            `}
+                            >
+                                {notes.length.toLocaleString()}/{MAX_LENGTH.toLocaleString()}
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end pt-2">
                             <Button
-                                variant="outline"
+                                variant="ghost"
+                                size="sm"
                                 disabled={!notes.trim() || !isSessionActive}
-                                className="text-xs"
+                                className="text-xs text-muted-foreground hover:text-foreground"
                             >
-                                Rascunho Temporário
+                                Salvar Rascunho
                             </Button>
                         </div>
                     </CardContent>
                 </Card>
+
+                <AppointmentAddForm
+                    onSelectPatient={setSelectedAppointmentId}
+                    currentAppointmentId={currentAppointmentId}
+                    currentSessionId={currentSessionId}
+                    isSessionActive={isSessionActive}
+                    onSessionStarted={handleSessionStarted}
+                    onSessionFinished={handleSessionFinished}
+                    notes={notes}
+                />
+
+
             </div>
         </>
     )

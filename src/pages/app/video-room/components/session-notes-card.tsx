@@ -92,7 +92,6 @@ export function SessionNotesCard({
             "w-full transition-all duration-300",
             !isSessionActive ? "opacity-60 pointer-events-none bg-muted/20" : "bg-card shadow-sm"
         )}>
-            {/* 1. Header Restaurado */}
             <CardHeader className="space-y-3 pb-4 border-b border-border/40">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -113,20 +112,9 @@ export function SessionNotesCard({
                             </CardDescription>
                         </div>
                     </div>
-
-                    {isSessionActive && (
-                        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                            </span>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Ativa</span>
-                        </div>
-                    )}
                 </div>
             </CardHeader>
 
-            {/* 2. Toolbar Estilo Doc */}
             <div className="bg-muted/5 border-b border-border/40 px-4 py-2">
                 <div className="flex flex-wrap items-center gap-1">
                     <div className="flex items-center gap-1 px-2 py-1 bg-background border rounded-md cursor-default hover:bg-muted/50 transition-colors">

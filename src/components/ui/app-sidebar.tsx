@@ -2,8 +2,6 @@
 
 import * as React from "react"
 import {
-  BrainCircuit,
-  Clock,
   GalleryVerticalEnd,
   Home,
   Users2,
@@ -24,7 +22,6 @@ import {
 import { getProfile, type GetProfileResponse } from "@/api/get-profile"
 import { TeamSwitcher } from "./team-switcher"
 import { NavMain } from "./nav-main"
-import { NavProjects } from "./nav-projects"
 import { NavUser } from "./nav-user"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -34,15 +31,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     retry: false,
     staleTime: 1000 * 60 * 5, // Cache de 5 minutos para performance
   })
-
-  const projects = [
-    { name: "Pomodoro", url: "#", icon: Clock },
-    {
-      name: "ChatBot MindFLush",
-      url: "https://cdn.botpress.cloud/webchat/v3.3/shareable.html?configUrl=https://files.bpcontent.cloud/2025/11/24/22/20251124224302-TGJFOW69.json",
-      icon: BrainCircuit,
-    },
-  ]
 
   const filteredNavMain = React.useMemo(() => {
     const baseNav = [
@@ -131,7 +119,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarContent>
         <NavMain items={filteredNavMain} />
-        <NavProjects projects={projects} />
       </SidebarContent>
 
       <SidebarFooter>

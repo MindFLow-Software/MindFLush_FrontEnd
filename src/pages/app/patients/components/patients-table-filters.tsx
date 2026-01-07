@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Search, UserRoundPlus, XCircle } from "lucide-react"
+import { CheckCircle2, Filter, Search, UserRoundPlus, Users, XCircle } from "lucide-react"
 import { useForm } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
@@ -73,13 +73,44 @@ export function PatientsTableFilters({ onPatientRegistered }: PatientsTableFilte
           value={filters.status}
           onValueChange={(value) => setFilters({ status: value })}
         >
-          <SelectTrigger className="h-8 w-full lg:w-[180px] bg-background">
-            <SelectValue placeholder="Status" />
+          <SelectTrigger
+            className="cursor-pointer h-9 min-w-[180px] w-auto bg-background
+            border-muted-foreground/20 hover:border-primary/30 transition-all
+            shadow-sm px-3"
+          >
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+              <SelectValue placeholder="Status" />
+            </div>
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os pacientes</SelectItem>
-            <SelectItem value="active">Apenas Ativos</SelectItem>
-            <SelectItem value="inactive">Apenas Inativos</SelectItem>
+
+          <SelectContent className="min-w-[220px]">
+            <SelectItem value="all" className="py-2.5">
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <Users className="h-4 w-4 text-slate-500" />
+                <span className="text-sm font-medium">
+                  Todos os Pacientes
+                </span>
+              </div>
+            </SelectItem>
+
+            <SelectItem value="active" className="py-2.5">
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                <span className="text-sm font-medium">
+                  Pacientes Ativos
+                </span>
+              </div>
+            </SelectItem>
+
+            <SelectItem value="inactive" className="py-2.5">
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <XCircle className="h-4 w-4 text-rose-500" />
+                <span className="text-sm font-medium">
+                  Pacientes Inativos
+                </span>
+              </div>
+            </SelectItem>
           </SelectContent>
         </Select>
 

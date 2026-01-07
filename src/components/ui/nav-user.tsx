@@ -167,21 +167,21 @@ export function NavUser() {
 
               <DropdownMenuGroup>
                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
+                  <DropdownMenuSubTrigger className="cursor-pointer">
                     <Palette className="mr-2 h-4 w-4" />
-                    <span>Tema</span>
+                    <span className="cursor-pointer">Tema</span>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
                     <DropdownMenuSubContent>
-                      <DropdownMenuItem onClick={() => setTheme("light")}>
+                      <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer">
                         <Sun className="mr-2 h-4 w-4" />
                         <span>Claro</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setTheme("dark")}>
+                      <DropdownMenuItem onClick={() => setTheme("dark")} className="cursor-pointer">
                         <Moon className="mr-2 h-4 w-4" />
                         <span>Escuro</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setTheme("system")}>
+                      <DropdownMenuItem onClick={() => setTheme("system")} className="cursor-pointer">
                         <Laptop className="mr-2 h-4 w-4" />
                         <span>Sistema</span>
                       </DropdownMenuItem>

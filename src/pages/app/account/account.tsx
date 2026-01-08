@@ -1,177 +1,91 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Mail, Phone, Award } from "lucide-react"
+"use client"
 
-// Mock de psicólogo
-const mockPsychologist = {
-    name: "Dra. Mariana Almeida",
-    specialization: "Terapia Cognitivo-Comportamental",
-    bio: "Psicóloga dedicada com foco em bem-estar emocional.",
-    registrationNumber: "CRP 12345",
-    email: "mariana.almeida@email.com",
-    phone: "+55 11 91234-5678",
-    photo: "", // ou URL de imagem
-}
+import { useEffect } from "react"
+import { Helmet } from "react-helmet-async"
+import { useQuery } from "@tanstack/react-query"
+import { Loader2, RefreshCw } from "lucide-react"
 
-// Mock de stats
-const generateMockStats = () =>
-    Array.from({ length: 52 * 7 }, (_, i) => {
-        const date = new Date()
-        date.setDate(date.getDate() - (52 * 7 - i))
-        return {
-            date: date.toISOString(),
-            count: Math.floor(Math.random() * 5), // 0 a 4 atendimentos
-        }
-    })
+import { useHeaderStore } from "@/hooks/use-header-store"
+import { getProfile } from "@/api/get-profile"
+import { Button } from "@/components/ui/button"
+import { PsychologistProfileCard } from "./components/psychologist-profile-card"
+import { ActivityHeatmap } from "./components/activity-heatmap"
 
-interface AppointmentStats {
-    date: string
-    count: number
-}
+// Mock de estatísticas (Pode ser movido para fora do componente para evitar recriação)
+const stats = Array.from({ length: 52 * 7 }, (_, i) => {
+    const date = new Date()
+    date.setDate(date.getDate() - (52 * 7 - i))
+    return {
+        date: date.toISOString(),
+        count: Math.floor(Math.random() * 6),
+    }
+})
 
 export function MockPsychologistProfilePage() {
-    const stats: AppointmentStats[] = generateMockStats()
+    const { setTitle } = useHeaderStore()
 
-    const getColor = (count: number, max: number) => {
-        if (count === 0) return "bg-slate-100 dark:bg-slate-900"
-        const intensity = count / max
-        if (intensity < 0.25) return "bg-blue-200 dark:bg-blue-900"
-        if (intensity < 0.5) return "bg-blue-400 dark:bg-blue-700"
-        if (intensity < 0.75) return "bg-blue-600 dark:bg-blue-600"
-        return "bg-blue-700 dark:bg-blue-500"
-    }
+    useEffect(() => {
+        setTitle('Minha Conta')
+    }, [setTitle])
 
-    const max = Math.max(...stats.map((d) => d.count), 1)
-    const weeks: AppointmentStats[][] = []
-    let currentWeek: AppointmentStats[] = []
-
-    stats.forEach((day, index) => {
-        currentWeek.push(day)
-        if ((index + 1) % 7 === 0) {
-            weeks.push(currentWeek)
-            currentWeek = []
-        }
+    /**
+     * ATENÇÃO: A queryKey DEVE ser a mesma utilizada no onSuccess 
+     * do componente PsychologistAvatarUpload para que a foto atualize 
+     * instantaneamente após o upload.
+     */
+    const { data: psychologist, isLoading, isError, refetch } = useQuery({
+        queryKey: ["psychologist-profile-v2"], // Sincronizado com o componente de upload
+        queryFn: getProfile,
+        staleTime: 1000 * 60 * 5, // 5 minutos (evita requests repetitivos desnecessários)
     })
 
-    if (currentWeek.length > 0) weeks.push(currentWeek)
+    console.log("Dados do Psicólogo:", psychologist?.profileImageUrl)
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center h-[600px] gap-3">
+                <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+                <p className="text-sm text-muted-foreground animate-pulse">Carregando seu perfil...</p>
+            </div>
+        )
+    }
+
+    if (isError) {
+        return (
+            <div className="flex flex-col items-center justify-center h-[600px] gap-4 px-4 text-center">
+                <div className="bg-destructive/10 p-4 rounded-full">
+                    <p className="text-4xl">😕</p>
+                </div>
+                <div className="space-y-1">
+                    <h2 className="text-xl font-semibold">Ops! Algo deu errado</h2>
+                    <p className="text-muted-foreground">Não conseguimos carregar os dados da sua conta agora.</p>
+                </div>
+                <Button variant="outline" onClick={() => refetch()} className="gap-2">
+                    <RefreshCw className="h-4 w-4" />
+                    Tentar novamente
+                </Button>
+            </div>
+        )
+    }
 
     return (
-        <main className="min-h-screen bg-background p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Perfil */}
-                <Card className="overflow-hidden lg:col-span-1">
-                    <div className="h-24 bg-linear-to-r from-blue-500 to-blue-600" />
-                    <CardHeader className="pb-0 -mt-12 relative z-10">
-                        <div className="flex gap-6 items-end">
-                            <div className="w-24 h-24 rounded-lg bg-slate-200 dark:bg-slate-800 border-4 border-background dark:border-slate-950 flex items-center justify-center overflow-hidden">
-                                {mockPsychologist.photo ? (
-                                    <img
-                                        src={mockPsychologist.photo}
-                                        alt={mockPsychologist.name}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <span className="text-3xl font-bold text-slate-400 dark:text-slate-600">
-                                        {mockPsychologist.name.charAt(0).toUpperCase()}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="pb-2">
-                                <h1 className="text-2xl font-bold text-foreground">{mockPsychologist.name}</h1>
-                                <p className="text-lg text-blue-600 dark:text-blue-400 font-semibold">
-                                    {mockPsychologist.specialization}
-                                </p>
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <p className="text-muted-foreground">{mockPsychologist.bio}</p>
-                        <div className="pt-4 space-y-3 border-t border-border">
-                            <div className="flex items-center gap-3">
-                                <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Registro Profissional</p>
-                                    <p className="font-semibold text-foreground">{mockPsychologist.registrationNumber}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Email</p>
-                                    <a
-                                        href={`mailto:${mockPsychologist.email}`}
-                                        className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                                    >
-                                        {mockPsychologist.email}
-                                    </a>
-                                </div>
-                            </div>
-                            {mockPsychologist.phone && (
-                                <div className="flex items-center gap-3">
-                                    <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">Telefone</p>
-                                        <a
-                                            href={`tel:${mockPsychologist.phone}`}
-                                            className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                                        >
-                                            {mockPsychologist.phone}
-                                        </a>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
+        <>
+            <Helmet title="Minha Conta" />
+            <div className="flex flex-col gap-6 mt-6 px-4 md:px-2">
+                <div className="max-w-7xl mx-auto w-full">
+                    <div className="grid grid-cols-1 gap-6">
+                        {psychologist && (
+                            <PsychologistProfileCard
+                                psychologist={psychologist}
+                            />
+                        )}
 
-                {/* Heatmap */}
-                <div className="lg:col-span-2 bg-card rounded-lg border border-border p-6">
-                    <div className="space-y-6">
-                        <div className="space-y-2">
-                            <h3 className="text-xl font-semibold text-foreground">Atividade de Atendimentos</h3>
-                            <p className="text-sm text-muted-foreground">Últimos 12 meses de consultas realizadas</p>
-                        </div>
-                        <div className="overflow-x-auto pb-4">
-                            <div className="flex gap-1 min-w-max">
-                                {weeks.map((week, weekIndex) => (
-                                    <div key={weekIndex} className="flex flex-col gap-1">
-                                        {week.map((day, dayIndex) => {
-                                            const date = new Date(day.date)
-                                            const dayName = date.toLocaleDateString("pt-BR", { weekday: "short" })
-
-                                            return (
-                                                <div key={dayIndex} className="group relative">
-                                                    <div
-                                                        className={`w-4 h-4 rounded-sm ${getColor(day.count, max)} border border-slate-300 dark:border-slate-700 transition-all hover:ring-2 ring-primary`}
-                                                        title={`${dayName} ${date.toLocaleDateString("pt-BR")}: ${day.count} atendimento(s)`}
-                                                    />
-                                                    <div className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-                                                        {dayName} {date.toLocaleDateString("pt-BR")}
-                                                        <br />
-                                                        {day.count} atendimento{day.count !== 1 ? "s" : ""}
-                                                    </div>
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Legenda */}
-                        <div className="flex items-center gap-4 text-sm">
-                            <span className="text-muted-foreground">Menos</span>
-                            <div className="flex gap-1">
-                                <div className="w-3 h-3 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm" />
-                                <div className="w-3 h-3 bg-blue-200 dark:bg-blue-900 border border-slate-300 dark:border-slate-700 rounded-sm" />
-                                <div className="w-3 h-3 bg-blue-400 dark:bg-blue-700 border border-slate-300 dark:border-slate-700 rounded-sm" />
-                                <div className="w-3 h-3 bg-blue-600 dark:bg-blue-600 border border-slate-300 dark:border-slate-700 rounded-sm" />
-                                <div className="w-3 h-3 bg-blue-700 dark:bg-blue-500 border border-slate-300 dark:border-slate-700 rounded-sm" />
-                            </div>
-                            <span className="text-muted-foreground">Mais</span>
+                        <div className="bg-card rounded-xl border border-border p-6 md:p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4 delay-150 duration-500">
+                            <ActivityHeatmap data={stats} />
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
+        </>
     )
 }

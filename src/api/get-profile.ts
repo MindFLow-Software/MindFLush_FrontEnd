@@ -14,30 +14,33 @@ export interface GetProfileResponse {
   gender: Gender
   expertise: Expertise
   isActive: boolean
-  profileImageUrl?: string
-  crp?: string
-}
-
-interface GetProfileApiResponse {
-  psychologist: GetProfileResponse
+  profileImageUrl: string | null
+  crp: string | null
 }
 
 export async function getProfile(): Promise<GetProfileResponse> {
-  const response = await api.get<GetProfileApiResponse>('/psychologist/me')
-  const psychologist = response.data.psychologist
+  const response = await api.get('/psychologist/me')
+  
+  const { psychologist: raw } = response.data
 
-  if (psychologist) {
-    const storedUser = localStorage.getItem('user')
-    const currentUser = storedUser ? JSON.parse(storedUser) : {}
-
-    const updatedUser = {
-      ...currentUser,
-      ...psychologist,
-      role: psychologist.role
-    }
-
-    localStorage.setItem('user', JSON.stringify(updatedUser))
+  const psychologist: GetProfileResponse = {
+    id: raw.id,
+    firstName: raw.firstName,
+    lastName: raw.lastName,
+    email: raw.email,
+    phoneNumber: raw.phoneNumber,
+    cpf: raw.cpf,
+    dateOfBirth: raw.dateOfBirth,
+    role: raw.role,
+    gender: raw.gender,
+    expertise: raw.expertise,
+    isActive: raw.isActive,
+    crp: raw.crp,
+    // ✅ Pega o ID que agora vem preenchido da API
+    profileImageUrl: raw.profileImageUrl || null 
   }
+
+  localStorage.setItem('user', JSON.stringify(psychologist))
 
   return psychologist
 }

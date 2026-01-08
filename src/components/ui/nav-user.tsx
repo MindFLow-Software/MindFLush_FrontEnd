@@ -20,7 +20,6 @@ import { signOut } from "@/api/sign-out"
 import { getProfile, type GetProfileResponse } from "@/api/get-profile"
 import { useTheme } from "../theme/theme-provider"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +40,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Skeleton } from "@/components/ui/skeleton"
+import { UserAvatar } from "@/components/user-avatar" // Importando o componente padronizado
 
 export function NavUser() {
   const { isMobile } = useSidebar()
@@ -63,7 +63,6 @@ export function NavUser() {
     mutationFn: signOut,
     onSuccess: () => {
       queryClient.clear()
-
       toast.success('Logout realizado com sucesso!', { duration: 4000 })
       navigate("/sign-in", { replace: true })
     },
@@ -80,8 +79,10 @@ export function NavUser() {
       ? "Erro ao carregar"
       : "Carregando..."
 
-  const avatar = profile?.profileImageUrl
-  const initials = profile?.firstName?.[0]?.toUpperCase() || "?"
+  // Cache buster para forçar a atualização da imagem quando alterada
+  const profileImage = profile?.profileImageUrl
+    ? `${profile.profileImageUrl}?t=${new Date().getTime()}`
+    : null
 
   return (
     <SidebarMenu>
@@ -93,24 +94,22 @@ export function NavUser() {
               disabled={isLoading}
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg">
-                {isLoading ? (
-                  <Skeleton className="h-8 w-8 rounded-lg" />
-                ) : avatar ? (
-                  <AvatarImage src={avatar} alt={name} />
-                ) : (
-                  <AvatarFallback className="rounded-lg">
-                    {initials}
-                  </AvatarFallback>
-                )}
-              </Avatar>
+              {isLoading ? (
+                <Skeleton className="h-8 w-8 rounded-lg" />
+              ) : (
+                <UserAvatar
+                  src={profileImage}
+                  name={name}
+                  className="h-8 w-8 rounded-lg"
+                />
+              )}
 
               <div className="grid flex-1 text-left text-sm leading-tight">
                 {isLoading ? (
-                  <>
+                  <div className="space-y-1">
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-3 w-24" />
-                  </>
+                  </div>
                 ) : (
                   <>
                     <span className="truncate font-medium">{name}</span>
@@ -134,15 +133,11 @@ export function NavUser() {
             >
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    {avatar ? (
-                      <AvatarImage src={avatar} alt={name} />
-                    ) : (
-                      <AvatarFallback className="rounded-lg">
-                        {initials}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
+                  <UserAvatar
+                    src={profileImage}
+                    name={name}
+                    className="h-8 w-8 rounded-lg"
+                  />
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium">{name}</span>
                     <span className="truncate text-xs text-muted-foreground">
@@ -169,7 +164,7 @@ export function NavUser() {
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger className="cursor-pointer">
                     <Palette className="mr-2 h-4 w-4" />
-                    <span className="cursor-pointer">Tema</span>
+                    <span>Tema</span>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
                     <DropdownMenuSubContent>
@@ -202,7 +197,7 @@ export function NavUser() {
                   </Link>
                 </DropdownMenuItem>
 
-                <DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
                   <Bell className="mr-2 h-4 w-4" />
                   Notificações
                 </DropdownMenuItem>
@@ -211,17 +206,12 @@ export function NavUser() {
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
-                asChild
                 disabled={isSigningOut}
-                className="text-red-500 dark:text-red-400 focus:text-red-500 focus:bg-red-100 dark:focus:bg-red-900/20"
+                className="text-red-500 dark:text-red-400 focus:text-red-500 focus:bg-red-100 dark:focus:bg-red-900/20 cursor-pointer"
+                onClick={() => signOutFn()}
               >
-                <button
-                  className="w-full text-left cursor-pointer flex items-center"
-                  onClick={() => signOutFn()}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sair
-                </button>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
           )}

@@ -4,18 +4,22 @@ export interface UpdateAppointmentRequest {
   id: string
   diagnosis?: string
   notes?: string
+  content?: string | null
   scheduledAt?: Date
+  status?: string
 }
 
 export async function updateAppointment({
   id,
   diagnosis,
-  notes,
+  content,
   scheduledAt,
+  status,
 }: UpdateAppointmentRequest) {
   await api.put(`/appointments/${id}`, {
     diagnosis,
-    notes,
+    content,
+    status,
     scheduledAt: scheduledAt?.toISOString(),
   })
 }

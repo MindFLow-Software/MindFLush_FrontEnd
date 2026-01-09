@@ -5,14 +5,14 @@ import { Helmet } from "react-helmet-async"
 
 import { AppointmentAddForm } from "./components/appointment-add-form"
 import { SessionTimer } from "./components/SessionTimer"
-import { SessionNotesCard } from "./components/session-notes-card"
 import { useHeaderStore } from "@/hooks/use-header-store"
+import { SessionNotesEditor } from "./components/session-notes-editor"
 
 export function AppointmentsRoom() {
     const { setTitle } = useHeaderStore()
 
     const [selectedAppointmentId, setSelectedAppointmentId] = useState("")
-    const [notes, setNotes] = useState("")
+    const [content, setNotes] = useState("")
     const [isSessionActive, setIsSessionActive] = useState(false)
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
 
@@ -30,11 +30,7 @@ export function AppointmentsRoom() {
         setCurrentSessionId(null)
         setSelectedAppointmentId("")
         setNotes("")
-    }, [])
-
-    const handleSaveDraft = () => {
-        console.log("Rascunho salvo:", notes)
-    }
+    }, [])    
 
     return (
         <>
@@ -45,11 +41,10 @@ export function AppointmentsRoom() {
                     <SessionTimer isActive={isSessionActive} />
                 </div>
 
-                <SessionNotesCard
-                    notes={notes}
+                <SessionNotesEditor
+                    content={content}           
                     isSessionActive={isSessionActive}
-                    onNotesChange={setNotes}
-                    onSaveDraft={handleSaveDraft}
+                    onContentChange={setNotes}   
                     maxLength={8000}
                 />
 
@@ -57,10 +52,10 @@ export function AppointmentsRoom() {
                     onSelectPatient={setSelectedAppointmentId}
                     currentAppointmentId={selectedAppointmentId}
                     currentSessionId={currentSessionId}
-                    isSessionActive={isSessionActive}
                     onSessionStarted={handleSessionStarted}
                     onSessionFinished={handleSessionFinished}
-                    notes={notes}
+                    isSessionActive={isSessionActive}
+                    content={content}
                 />
             </div>
         </>

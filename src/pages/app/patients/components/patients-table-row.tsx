@@ -74,7 +74,7 @@ export function PatientsTableRow({ patient }: PatientsTableRowProps) {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 rounded-lg opacity-60 group-hover:opacity-100 group-hover:bg-primary/10 transition-all"
+                                className="cursor-pointer h-8 w-8 rounded-lg opacity-60 group-hover:opacity-100 group-hover:bg-primary/10 transition-all"
                                 onClick={() => setIsDetailsOpen(true)}
                             >
                                 <Search className="h-4 w-4" />

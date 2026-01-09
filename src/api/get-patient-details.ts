@@ -15,6 +15,7 @@ export interface GetPatientDetailsResponse {
       theme: string
       duration: string
       status: 'Concluída' | 'Pendente'
+      content: string | null
     }>
   }
   meta: {

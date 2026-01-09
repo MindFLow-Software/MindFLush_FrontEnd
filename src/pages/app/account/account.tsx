@@ -11,15 +11,6 @@ import { Button } from "@/components/ui/button"
 import { PsychologistProfileCard } from "./components/psychologist-profile-card"
 import { ActivityHeatmap } from "./components/activity-heatmap"
 
-const stats = Array.from({ length: 52 * 7 }, (_, i) => {
-    const date = new Date()
-    date.setDate(date.getDate() - (52 * 7 - i))
-    return {
-        date: date.toISOString(),
-        count: Math.floor(Math.random() * 6),
-    }
-})
-
 export function MockPsychologistProfilePage() {
     const { setTitle } = useHeaderStore()
 
@@ -72,7 +63,7 @@ export function MockPsychologistProfilePage() {
                 )}
 
                 <div className="bg-card rounded-xl border border-border p-6 md:p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4 delay-150 duration-500">
-                    <ActivityHeatmap data={stats} />
+                    <ActivityHeatmap/>
                 </div>
             </div>
         </>

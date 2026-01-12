@@ -21,7 +21,7 @@ export function SuggestionPage() {
                 {/* Header Section */}
                 <div className="flex flex-col gap-2 border-l-4 border-[#27187E] pl-4 py-1">
                     <h1 className="text-2xl font-bold text-foreground tracking-tight">
-                        Central de Sugestões
+                        Envio de Sugestões
                     </h1>
                     <p className="text-sm text-muted-foreground leading-relaxed">
                         Tem uma ideia para melhorar sua rotina? Compartilhe conosco!

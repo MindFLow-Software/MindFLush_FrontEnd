@@ -85,7 +85,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: Inbox,
         items: [
           { title: "Enviar Sugestão", url: "/suggestion" },
-          // { title: "Ver Sugestões", url: "/suggestions" },
+          { title: "Envios da Comunidade", url: "/suggestion-list" },
         ],
       }
 

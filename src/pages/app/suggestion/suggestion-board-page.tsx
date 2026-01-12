@@ -71,7 +71,7 @@ export function SuggestionBoardPage() {
                     <div className="space-y-1">
                         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
                             <LayoutGrid className="size-6" style={{ color: BRAND_COLOR }} />
-                            <span>Roadmap de Sugestões</span>
+                            <span>Sugestões da Comunidade</span>
                         </h1>
                         <p className="text-sm text-muted-foreground">
                             Pesquise ideias existentes antes de criar uma nova para evitar duplicatas.

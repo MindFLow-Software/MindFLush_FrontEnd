@@ -9,6 +9,7 @@ import {
   CalendarCheck,
   ShieldCheck,
   HeartPlus,
+  Inbox,
 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 
@@ -78,6 +79,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           { title: "Saques", url: "#" },
         ],
       },
+      {
+        title: "Sugestões e Feedback",
+        url: "#",
+        icon: Inbox,
+        items: [
+          { title: "Enviar Sugestão", url: "/suggestion" },
+          // { title: "Ver Sugestões", url: "/suggestions" },
+        ],
+      }
+
     ]
 
     const userRole = (profile?.role as string)?.toUpperCase()

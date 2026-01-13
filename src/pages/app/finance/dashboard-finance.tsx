@@ -3,10 +3,12 @@
 import { Helmet } from "react-helmet-async"
 
 import { useHeaderStore } from "@/hooks/use-header-store"
-import { TotalRevenueCard } from './components/total-revenue-card'
-import { CompletedTransactionsCard } from './components/completed-transactions-card'
-import { AvailableWithdrawalCard } from './components/available-withdrawal-card'
+import { PendingPaymentsCard } from './components/pending-payments-card'
+import { AverageTicketCard } from './components/average-ticket-card'
 import { useEffect } from "react"
+import { MonthlyRevenueCard } from "./components/monthly-revenue-card"
+import { TransactionsValueChart } from "./components/transactions-Value-chart"
+import { TransactionStatusOverview } from "./components/transaction-status-overview"
 
 
 export function DashboardFinance() {
@@ -20,7 +22,7 @@ export function DashboardFinance() {
         <>
             <Helmet title="Dashboard Financeiro" />
 
-            <div className="flex flex-col gap-4 px-4 py-4 sm:px-6 sm:py-6">
+            <div className="flex flex-col gap-5 mt-6 px-2 pb-8">
 
                 <div className="flex justify-end">
                     {/* <DateRangePicker
@@ -29,20 +31,18 @@ export function DashboardFinance() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <TotalRevenueCard totalRevenue={0} monthlyRevenue={0} />
-                    <CompletedTransactionsCard />
-                    <AvailableWithdrawalCard totalAvailable={0} pendingAmount={0} />
+                    <MonthlyRevenueCard revenue={0} />
+                    <PendingPaymentsCard amount={0} />
+                    <AverageTicketCard value={0} />
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 px-4 sm:px-6 lg:grid-cols-2">
-                {/* <NewPatientsBarChart startDate={startDate} endDate={endDate} />
-                <SessionsChart startDate={startDate} endDate={endDate} /> */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
+                <TransactionsValueChart />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 px-4 sm:px-6 lg:grid-cols-2 mb-6">
-                {/* <PatientsByAgeChart startDate={startDate} endDate={endDate} />
-                <PatientsByGenderChart startDate={startDate} endDate={endDate} /> */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <TransactionStatusOverview />
             </div>
         </>
     )

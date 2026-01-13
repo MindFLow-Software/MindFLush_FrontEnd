@@ -44,29 +44,35 @@ export function Dashboard() {
         <>
             <Helmet title="Dashboard" />
 
-            <div className="flex flex-col gap-4 px-4 py-4 sm:px-6 sm:py-6">
-                <div className="flex justify-end">
+            {/* Container unificado com padding lateral reduzido (px-2) */}
+            <div className="flex flex-col gap-5 mt-6 px-2 pb-8">
+
+                {/* Filtro de Data */}
+                <div className="flex justify-end pr-1">
                     <DateRangePicker
                         onChange={handleRangeChange}
                     />
                 </div>
 
+                {/* Grid de Cards de Métricas */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <PatientsCountCard startDate={startDate} endDate={endDate} />
                     <PatientsAmountCard />
                     <MonthPatientsAmountCard startDate={startDate} endDate={endDate} />
                     <TotalWorkHoursCard startDate={startDate} endDate={endDate} />
                 </div>
-            </div>
 
-            <div className="grid grid-cols-1 gap-4 px-4 sm:px-6 lg:grid-cols-2">
-                <NewPatientsBarChart startDate={startDate} endDate={endDate} />
-                <SessionsBarChart startDate={startDate} endDate={endDate} />
-            </div>
+                {/* Grid de Gráficos de Barra */}
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <NewPatientsBarChart startDate={startDate} endDate={endDate} />
+                    <SessionsBarChart startDate={startDate} endDate={endDate} />
+                </div>
 
-            <div className="grid grid-cols-1 gap-4 px-4 sm:px-6 lg:grid-cols-2 mb-6">
-                <PatientsByAgeChart startDate={startDate} endDate={endDate} />
-                <PatientsByGenderChart startDate={startDate} endDate={endDate} />
+                {/* Grid de Gráficos Demográficos */}
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <PatientsByAgeChart startDate={startDate} endDate={endDate} />
+                    <PatientsByGenderChart startDate={startDate} endDate={endDate} />
+                </div>
             </div>
         </>
     )

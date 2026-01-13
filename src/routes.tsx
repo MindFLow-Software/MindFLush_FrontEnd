@@ -35,7 +35,8 @@ const getUser = () => {
 }
 
 const authLoader = () => {
-  if (!localStorage.getItem('token')) {
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
+  if (!isAuthenticated) {
     return redirect('/sign-in')
   }
   return null
@@ -55,7 +56,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, allowedRole }: ProtectedRouteProps) => {
-  const isAuthenticated = !!localStorage.getItem('token')
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
   const user = getUser()
   const location = useLocation()
 
@@ -90,7 +91,6 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/',
     element: <AuthLayout />,
     children: [
       { path: '/sign-in', element: <SignIn /> },
@@ -98,13 +98,12 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/',
-    loader: authLoader,
     element: (
       <ProtectedRoute>
         <AppLayout />
       </ProtectedRoute>
     ),
+    loader: authLoader,
     children: [
       { path: '/dashboard', element: <Dashboard /> },
       { path: '/dashboard-finance', element: <DashboardFinance /> },
@@ -124,5 +123,9 @@ export const router = createBrowserRouter([
       },
       { path: '/suggestion', element: <SuggestionPage /> },
     ],
+  },
+  {
+    path: '*',
+    element: <NotFound />,
   },
 ])

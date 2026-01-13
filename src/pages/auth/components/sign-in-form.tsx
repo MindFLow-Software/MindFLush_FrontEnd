@@ -1,3 +1,5 @@
+"use client"
+
 import type React from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -49,12 +51,14 @@ export function SignInForm({ className, ...props }: React.ComponentProps<"form">
 
         localStorage.setItem("isAuthenticated", "true")
 
-        toast.success("Login realizado com sucesso!", { duration: 4000 })
+        toast.success("Login realizado com sucesso!", { duration: 2000 })
 
-        navigate("/dashboard", { replace: true })
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true })
+        }, 100)
 
       } catch (error: any) {
-        console.error("❌ Erro na requisição de login:", error)
+        console.error(error)
         if (error?.response?.status === 401) {
           toast.error("Credenciais inválidas. Verifique seu e-mail e senha.")
         } else {
@@ -73,7 +77,6 @@ export function SignInForm({ className, ...props }: React.ComponentProps<"form">
   return (
     <form onSubmit={handleSubmit(handleSignIn)} className={cn("flex flex-col gap-5", className)} {...props}>
       <div className="flex flex-col gap-5">
-        {/* Email Field */}
         <div className="space-y-2">
           <Label htmlFor="email" className="text-sm font-medium">
             E-mail profissional
@@ -156,7 +159,7 @@ export function SignInForm({ className, ...props }: React.ComponentProps<"form">
           <Button
             disabled={isSubmitting}
             type="submit"
-            className="cursor-pointer w-full h-11 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 font-medium"
+            className="cursor-pointer w-full h-11 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 font-medium text-white"
           >
             {isSubmitting ? (
               <span className="flex items-center gap-2">

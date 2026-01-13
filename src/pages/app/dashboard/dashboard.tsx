@@ -45,7 +45,6 @@ export function Dashboard() {
             <Helmet title="Dashboard" />
 
             <div className="flex flex-col gap-4 px-4 py-4 sm:px-6 sm:py-6">
-
                 <div className="flex justify-end">
                     <DateRangePicker
                         onChange={handleRangeChange}
@@ -56,7 +55,7 @@ export function Dashboard() {
                     <PatientsCountCard startDate={startDate} endDate={endDate} />
                     <PatientsAmountCard />
                     <MonthPatientsAmountCard startDate={startDate} endDate={endDate} />
-                    <TotalWorkHoursCard startDate={startDate} endDate={endDate}/>
+                    <TotalWorkHoursCard startDate={startDate} endDate={endDate} />
                 </div>
             </div>
 

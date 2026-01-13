@@ -15,22 +15,23 @@ export function SignIn() {
     let isMounted = true
 
     async function checkAuthentication() {
+      const isAuthenticatedFlag = localStorage.getItem('isAuthenticated') === 'true'
+
+      if (!isAuthenticatedFlag) {
+        if (isMounted) setIsChecking(false)
+        return
+      }
+
       try {
         await api.get('/psychologist/me')
-          .then(() => navigate('/dashboard'))
-          .catch(() => setIsChecking(false))
 
         if (isMounted) {
           navigate('/dashboard', { replace: true })
         }
       } catch (error) {
-        console.error('Erro capturado:', error)
         if (isMounted) {
+          localStorage.removeItem('isAuthenticated')
           setIsChecking(false)
-        }
-      } finally {
-        if (isMounted) {
-          setTimeout(() => setIsChecking(false), 1000)
         }
       }
     }
@@ -45,7 +46,10 @@ export function SignIn() {
   if (isChecking) {
     return (
       <div className="flex min-h-svh items-center justify-center">
-        <p className="text-sm text-muted-foreground animate-pulse">Carregando...</p>
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-700 border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Verificando acesso...</p>
+        </div>
       </div>
     )
   }

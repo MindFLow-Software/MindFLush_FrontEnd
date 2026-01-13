@@ -5,15 +5,20 @@ export const api = axios.create({
   withCredentials: true,
 })
 
-
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (!error.response) {
+      console.error('Erro de rede ou API fora do ar')
+      return Promise.reject(error)
+    }
+
+    if (error.response.status === 401) {
       if (window.location.pathname !== '/sign-in') {
         window.location.href = '/sign-in'
       }
     }
+
     return Promise.reject(error)
   }
 )

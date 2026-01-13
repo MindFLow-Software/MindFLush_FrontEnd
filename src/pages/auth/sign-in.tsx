@@ -12,33 +12,35 @@ export function SignIn() {
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
-    let isMounted = true
+  let isMounted = true
 
-    async function checkAuthentication() {
-      try {
-        // Tenta buscar o perfil do psicólogo
-        await api.get('/psychologist/me')
+  async function checkAuthentication() {
+    try {
+      await Promise.race([
+        api.get('/psychologist/me'),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 8000),
+        ),
+      ])
 
-        // Se retornar 200, significa que o cookie é válido
-        if (isMounted) {
-          navigate('/dashboard', { replace: true })
-        }
-      } catch (error) {
-        // Se cair aqui (401), apenas liberamos a visualização do formulário
-        if (isMounted) {
-          setIsChecking(false)
-        }
+      if (isMounted) {
+        navigate('/dashboard', { replace: true })
+      }
+    } catch (error) {
+      console.error('Erro na checagem de auth:', error)
+      if (isMounted) {
+        setIsChecking(false)
       }
     }
+  }
 
-    checkAuthentication()
+  checkAuthentication()
+  
+  return () => {
+    isMounted = false
+  }
+}, [navigate])
 
-    return () => {
-      isMounted = false
-    }
-  }, [navigate])
-
-  // Enquanto verifica se o usuário já tem cookie, não mostra nada (evita flicker)
   if (isChecking) {
     return (
       <div className="flex min-h-svh items-center justify-center">

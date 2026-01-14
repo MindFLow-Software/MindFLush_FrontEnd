@@ -115,7 +115,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "#",
         icon: ShieldCheck,
         items: [
-          { title: "Aprovações Pendentes", url: "/approvals" },
+          { title: "Solicitações", url: "/approvals" },
           { title: "Visão Geral Admin", url: "/admin-dashboard" },
           { title: "Gestão de Psicólogos", url: "/admin/psychologists" },
         ],

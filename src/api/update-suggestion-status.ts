@@ -1,10 +1,13 @@
 import { api } from "@/lib/axios"
 
-export interface UpdateSuggestionStatusParams {
+interface UpdateSuggestionParams {
   id: string
-  status: "PENDING" | "OPEN" | "UNDER_REVIEW" | "IMPLEMENTED" | "REJECTED"
+  status?: string
+  title?: string       
+  category?: string    
+  description?: string 
 }
 
-export async function updateSuggestionStatus({ id, status }: UpdateSuggestionStatusParams) {
-  await api.patch(`/admin/suggestions/${id}/status`, { status })
+export async function updateSuggestionStatus({ id, ...data }: UpdateSuggestionParams) {
+  await api.patch(`/admin/suggestions/${id}/status`, data)
 }

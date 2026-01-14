@@ -1,18 +1,36 @@
 "use client"
 
+import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Check, X, MessageSquare, Loader2, Calendar, User } from "lucide-react"
+import { Check, X, MessageSquare, Loader2, Calendar, User, Eye, Save, Tag, FileText, AlignLeft } from "lucide-react"
 import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
 import { toast } from "sonner"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { api } from "@/lib/axios"
 import { updateSuggestionStatus } from "@/api/update-suggestion-status"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const CATEGORY_LABELS: Record<string, string> = {
-    UI_UX: "UI / UX",
+    UI_UX: "Interface / UX",
     SCHEDULING: "Agendamentos",
     REPORTS: "Relatórios",
     PRIVACY_LGPD: "Privacidade",
@@ -23,7 +41,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 export function PendingSuggestionsModeration() {
     const queryClient = useQueryClient()
 
-    // 1. Busca apenas as sugestões que precisam de aprovação (PENDING)
     const { data: suggestions, isLoading } = useQuery({
         queryKey: ["admin", "suggestions", "pending"],
         queryFn: async () => {
@@ -32,13 +49,12 @@ export function PendingSuggestionsModeration() {
         },
     })
 
-    // 2. Mutation para aprovar ou rejeitar
     const { mutateAsync: handleUpdateStatus, isPending: isUpdating } = useMutation({
         mutationFn: updateSuggestionStatus,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["admin", "suggestions"] })
             queryClient.invalidateQueries({ queryKey: ["admin", "suggestions-stats"] })
-            toast.success("Ação realizada com sucesso!")
+            toast.success("Sugestão aprovada com sucesso!")
         },
         onError: () => toast.error("Falha ao processar moderação.")
     })
@@ -49,12 +65,12 @@ export function PendingSuggestionsModeration() {
         <Card className="border-slate-200 shadow-md rounded-2xl overflow-hidden">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-amber-100 rounded-lg">
-                        <MessageSquare className="size-5 text-amber-600" />
+                    <div className="p-2 bg-[#27187E]/10 rounded-lg">
+                        <MessageSquare className="size-5 text-[#27187E]" />
                     </div>
                     <div>
                         <CardTitle className="text-lg font-bold text-slate-800">Fila de Moderação</CardTitle>
-                        <CardDescription className="text-xs">Sugestões aguardando revisão para tornarem-se públicas</CardDescription>
+                        <CardDescription className="text-xs">Avalie e edite os feedbacks antes de torná-los públicos</CardDescription>
                     </div>
                 </div>
             </CardHeader>
@@ -65,86 +81,183 @@ export function PendingSuggestionsModeration() {
                 ) : isEmpty ? (
                     <div className="p-12 text-center space-y-2">
                         <Check className="size-8 text-emerald-500 mx-auto opacity-20" />
-                        <p className="text-sm text-slate-400 font-medium">Tudo em dia! Nenhuma sugestão pendente.</p>
+                        <p className="text-sm text-slate-400 font-medium">Nenhuma sugestão pendente no momento.</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-100">
                         {suggestions.map((item: any) => (
-                            <div key={item.id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
-
-                                {/* Info da Sugestão */}
-                                <div className="space-y-2 flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md">
-                                            {CATEGORY_LABELS[item.category] || "Geral"}
-                                        </span>
-                                        <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                                            <Calendar className="size-3" /> {format(new Date(item.createdAt), "dd/MM/yy")}
-                                        </span>
-                                    </div>
-                                    <h4 className="font-bold text-slate-800 text-sm">{item.title}</h4>
-                                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{item.description}</p>
-
-                                    <div className="flex items-center gap-2 text-[11px] text-slate-400 italic">
-                                        <User className="size-3" /> Enviado por {item.psychologistName}
-                                    </div>
-                                </div>
-
-                                {/* Ações Rápidas */}
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl h-9">
-                                                Visualizar
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="rounded-2xl">
-                                            <DialogHeader>
-                                                <DialogTitle className="text-xl font-bold">{item.title}</DialogTitle>
-                                            </DialogHeader>
-                                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm text-slate-600 mb-4">
-                                                {item.description}
-                                            </div>
-                                            <div className="flex gap-3">
-                                                <Button
-                                                    onClick={() => handleUpdateStatus({ id: item.id, status: "OPEN" })}
-                                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 font-bold rounded-xl"
-                                                    disabled={isUpdating}
-                                                >
-                                                    Aprovar e Publicar
-                                                </Button>
-                                                <Button
-                                                    onClick={() => handleUpdateStatus({ id: item.id, status: "REJECTED" })}
-                                                    variant="destructive"
-                                                    className="flex-1 font-bold rounded-xl"
-                                                    disabled={isUpdating}
-                                                >
-                                                    Rejeitar
-                                                </Button>
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
-
-                                    <Button
-                                        onClick={() => handleUpdateStatus({ id: item.id, status: "OPEN" })}
-                                        disabled={isUpdating}
-                                        className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white border-emerald-100 size-9 p-0 rounded-xl transition-all"
-                                    >
-                                        <Check className="size-4" />
-                                    </Button>
-                                    <Button
-                                        onClick={() => handleUpdateStatus({ id: item.id, status: "REJECTED" })}
-                                        disabled={isUpdating}
-                                        className="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border-red-100 size-9 p-0 rounded-xl transition-all"
-                                    >
-                                        <X className="size-4" />
-                                    </Button>
-                                </div>
-                            </div>
+                            <SuggestionModerationItem
+                                key={item.id}
+                                item={item}
+                                onUpdate={handleUpdateStatus}
+                                isUpdating={isUpdating}
+                            />
                         ))}
                     </div>
                 )}
             </CardContent>
         </Card>
+    )
+}
+
+function SuggestionModerationItem({ item, onUpdate, isUpdating }: { item: any, onUpdate: any, isUpdating: boolean }) {
+    const [title, setTitle] = useState(item.title)
+    const [category, setCategory] = useState(item.category)
+    const [description, setDescription] = useState(item.description)
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+    async function handleAction(status?: string) {
+        try {
+            await onUpdate({
+                id: item.id,
+                status: status || item.status,
+                title,
+                category,
+                description
+            })
+            setIsDialogOpen(false)
+        } catch (error) { }
+    }
+
+    return (
+        <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-slate-50/50 transition-colors">
+            <div className="space-y-2 flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-[#27187E]/10 text-[#27187E] rounded-md tracking-wider">
+                        {CATEGORY_LABELS[item.category] || "Geral"}
+                    </span>
+                    <span className="text-[10px] text-slate-400 flex items-center gap-1 font-medium">
+                        <Calendar className="size-3" /> {format(new Date(item.createdAt), "dd/MM/yyyy", { locale: ptBR })}
+                    </span>
+                </div>
+                <h4 className="font-bold text-slate-800 text-sm break-all leading-tight">{item.title}</h4>
+                <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed max-w-3xl italic break-all">
+                    "{item.description}"
+                </p>
+                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium">
+                    <User className="size-3" /> Enviado por {item.psychologistName || "Psicólogo"}
+                </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl h-9 px-4 gap-2 hover:bg-[#27187E]/5 border-slate-200 cursor-pointer">
+                            <Eye className="size-3.5" /> Revisar e Editar
+                        </Button>
+                    </DialogTrigger>
+
+                    {/* Adicionado overflow-hidden e min-w-0 para conter o conteúdo */}
+                    <DialogContent className="sm:max-w-[650px] border-[#27187E]/10 gap-6 rounded-2xl overflow-hidden min-w-0">
+                        <DialogHeader className="min-w-0 overflow-hidden">
+                            <DialogTitle className="text-xl font-bold text-slate-900 leading-tight break-all">Revisão de Conteúdo</DialogTitle>
+                        </DialogHeader>
+
+                        <div className="space-y-5 min-w-0 overflow-hidden">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2 min-w-0">
+                                    <Label className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-2">
+                                        <FileText className="size-3" /> Título (Editável)
+                                    </Label>
+                                    <Input
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        className="h-10 border-slate-200 focus-visible:ring-[#27187E] font-medium w-full"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-2">
+                                        <Tag className="size-3" /> Categoria
+                                    </Label>
+                                    <Select value={category} onValueChange={setCategory}>
+                                        <SelectTrigger className="h-10 border-slate-200 font-medium">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
+                                                <SelectItem key={val} value={val}>{label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 min-w-0">
+                                <Label className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-2">
+                                    <AlignLeft className="size-3" /> Descrição da Sugestão (Editável)
+                                </Label>
+                                {/* break-all adicionado ao Textarea */}
+                                <Textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    className="min-h-[220px] resize-none border-slate-200 focus-visible:ring-[#27187E] leading-relaxed text-slate-600 text-sm break-all"
+                                    placeholder="Corrija erros ou remova termos impróprios aqui..."
+                                />
+                            </div>
+
+                            <footer className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2 border-t border-dashed border-slate-200 min-w-0 overflow-hidden">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 shrink-0"><User className="size-4" /></div>
+                                    <div className="flex flex-col text-[11px] min-w-0 overflow-hidden">
+                                        <span className="font-black uppercase text-slate-400">Autor Original</span>
+                                        <span className="font-bold text-slate-700 truncate">{item.psychologistName || "Não identificado"}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 text-[11px] min-w-0 overflow-hidden">
+                                    <div className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 shrink-0"><Calendar className="size-4" /></div>
+                                    <div className="flex flex-col min-w-0 overflow-hidden">
+                                        <span className="font-black uppercase text-slate-400">Enviado em</span>
+                                        <span className="font-bold text-slate-700 truncate">{format(new Date(item.createdAt), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}</span>
+                                    </div>
+                                </div>
+                            </footer>
+                        </div>
+
+                        <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-2">
+                            <Button
+                                variant="ghost"
+                                onClick={() => handleAction()}
+                                disabled={isUpdating}
+                                className="flex-1 rounded-xl font-bold h-11 text-slate-500 hover:bg-slate-100 cursor-pointer"
+                            >
+                                <Save className="size-4 mr-2" /> Salvar Edição
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                <div className="flex items-center gap-1 border-l border-slate-200 pl-2 ml-1 shrink-0">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    onClick={() => handleAction("OPEN")}
+                                    disabled={isUpdating}
+                                    variant="ghost" size="icon"
+                                    className="text-emerald-600 hover:bg-emerald-50 size-9 rounded-xl transition-all cursor-pointer"
+                                >
+                                    {isUpdating ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top"><p>Aprovar sugestão</p></TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    onClick={() => handleAction("REJECTED")}
+                                    disabled={isUpdating}
+                                    variant="ghost" size="icon"
+                                    className="text-red-500 hover:bg-red-50 size-9 rounded-xl transition-all cursor-pointer"
+                                >
+                                    {isUpdating ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top"><p>Rejeitar sugestão</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+            </div>
+        </div>
     )
 }

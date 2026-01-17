@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { format } from "date-fns"
+import { format, isValid } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Download, FileText, ArrowLeft, Loader2 } from "lucide-react"
 import { pdf } from "@react-pdf/renderer"
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 
-// Importe o seu template (ajuste o caminho se necessário)
 import { SessionPDFTemplate } from "../../../../utils/session-pdf-template"
 
 interface EvolutionViewerProps {
@@ -31,29 +30,32 @@ export function EvolutionViewer({
 }: EvolutionViewerProps) {
     const [isGenerating, setIsGenerating] = useState(false)
 
+    const parsedDate = new Date(date)
+    const isDateValid = isValid(parsedDate)
+
     const handleExportPDF = async () => {
         try {
             setIsGenerating(true)
 
-            // 1. Gera o Blob do PDF usando o seu template
             const blob = await pdf(
                 <SessionPDFTemplate
                     psychologist={psychologist}
                     patientName={patientName}
-                    date={format(new Date(date), "dd/MM/yyyy")}
+                    date={isDateValid ? format(parsedDate, "dd/MM/yyyy") : "--/--/----"}
                     content={content || "Nenhuma evolução registrada."}
                     diagnosis={diagnosis || "Não informado"}
                 />
             ).toBlob()
 
-            // 2. Cria o link e dispara o download
             const url = URL.createObjectURL(blob)
             const link = document.createElement('a')
             link.href = url
-            link.download = `Evolucao-${patientName.replace(/\s+/g, '-')}-${format(new Date(date), "dd-MM-yyyy")}.pdf`
+
+            const dateSuffix = isDateValid ? format(parsedDate, "dd-MM-yyyy") : "data-indisponivel"
+            link.download = `Evolucao-${patientName.replace(/\s+/g, '-')}-${dateSuffix}.pdf`
+
             link.click()
 
-            // 3. Limpeza
             URL.revokeObjectURL(url)
             toast.success("PDF gerado com sucesso!")
         } catch (error) {
@@ -78,7 +80,6 @@ export function EvolutionViewer({
                 </Button>
             </div>
 
-            {/* Cabeçalho */}
             <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2 text-slate-900">
                     <FileText className="h-5 w-5 text-slate-400" />
@@ -92,23 +93,24 @@ export function EvolutionViewer({
                         Paciente: <span className="font-medium text-slate-700">{patientName}</span>
                     </p>
                     <p className="text-muted-foreground tabular-nums">
-                        {format(new Date(date), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                        {isDateValid
+                            ? format(parsedDate, "dd 'de' MMMM, yyyy", { locale: ptBR })
+                            : "Data não disponível"}
                     </p>
                 </div>
             </div>
 
             <Separator className="bg-slate-100" />
 
-            {/* Área do Conteúdo */}
-            <div className="min-h-[180px] px-1">
-                <p className="whitespace-pre-wrap font-serif text-lg leading-relaxed text-slate-700">
+            {/* Ajuste realizado nesta div e no parágrafo abaixo */}
+            <div className="min-h-[180px] px-1 overflow-hidden">
+                <p className="whitespace-pre-wrap break-words font-serif text-lg leading-relaxed text-slate-700">
                     {content || "Nenhuma anotação registrada para esta sessão."}
                 </p>
             </div>
 
             <Separator className="bg-slate-100" />
 
-            {/* Rodapé e Ação */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-2">
                 <p className="text-[11px] leading-relaxed text-slate-400 italic max-w-sm">
                     Este documento é sigiloso e de uso restrito, gerado a partir de registro eletrônico de prontuário.

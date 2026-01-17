@@ -12,9 +12,11 @@ export interface GetPatientDetailsResponse {
     sessions: Array<{
       id: string
       date: string
+      sessionDate?: string | null
+      createdAt: string
       theme: string
       duration: string
-      status: 'Concluída' | 'Pendente'
+      status: string
       content: string | null
     }>
   }

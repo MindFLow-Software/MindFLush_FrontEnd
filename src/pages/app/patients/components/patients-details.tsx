@@ -4,12 +4,11 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Loader2, ClockIcon, Eye } from "lucide-react"
 import { getPatientDetails } from "@/api/get-patient-details"
-// 1. Usamos o seu hook customizado para pegar os dados do psicólogo
 import { usePsychologistProfile } from "@/hooks/use-psychologist-profile"
 
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item"
+import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Button } from "@/components/ui/button"
 
 import { formatCPF } from "@/utils/formatCPF"
@@ -26,14 +25,12 @@ export function PatientsDetails({ patientId }: PatientsDetailsProps) {
     const [pageIndex, setPageIndex] = useState(0)
     const [selectedSession, setSelectedSession] = useState<any | null>(null)
 
-    // Detalhes do paciente
     const { data, isLoading } = useQuery({
         queryKey: ["patient-details", patientId, pageIndex],
         queryFn: () => getPatientDetails(patientId, pageIndex),
         enabled: !!patientId,
     })
 
-    // 2. Chamada do seu hook de perfil
     const { data: profile } = usePsychologistProfile()
 
     if (isLoading || !data) {
@@ -89,7 +86,7 @@ export function PatientsDetails({ patientId }: PatientsDetailsProps) {
                 <EvolutionViewer
                     patientName={`${patient.firstName} ${patient.lastName}`}
                     content={selectedSession.content || ""}
-                    date={selectedSession.date}
+                    date={selectedSession.sessionDate || selectedSession.date || selectedSession.createdAt}
                     diagnosis={selectedSession.theme}
                     psychologist={{
                         name: profile
@@ -139,9 +136,9 @@ export function PatientsDetails({ patientId }: PatientsDetailsProps) {
                         </ItemMedia>
                         <ItemContent>
                             <ItemTitle>Tempo médio de atendimento</ItemTitle>
-                            <ItemDescription>
+                            <ItemTitle className="text-xs font-normal text-muted-foreground">
                                 Média baseada em atendimentos concluídos
-                            </ItemDescription>
+                            </ItemTitle>
                         </ItemContent>
                         <ItemActions>
                             <div className="text-right">

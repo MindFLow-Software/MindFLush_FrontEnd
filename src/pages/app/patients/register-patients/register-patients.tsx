@@ -4,10 +4,10 @@ import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { Loader2, CalendarIcon, Eye, EyeOff, Venus, Mars, Users } from "lucide-react"
+import { Loader2, CalendarIcon, Eye, EyeOff, Venus, Mars, Users, ShieldCheck, Contact } from "lucide-react"
 import { toast } from "sonner"
 import { AxiosError } from "axios"
-
+import { IMaskMixin } from "react-imask"
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -15,11 +15,9 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { formatCPF } from "@/utils/formatCPF"
-import { formatPhone } from "@/utils/formatPhone"
 import { registerPatients } from "@/api/create-patients"
+import { uploadAttachment } from "@/api/attachments"
 import { cn } from "@/lib/utils"
-import { api } from "@/lib/axios"
 import { UploadZone } from "./upload-zone"
 import { PatientAvatarUpload } from "./patient-avatar-upload"
 
@@ -36,6 +34,10 @@ interface FormErrors {
 interface RegisterPatientsProps {
     onSuccess?: () => void
 }
+
+const MaskedInput = IMaskMixin(({ inputRef, ...props }: any) => (
+    <Input ref={inputRef} {...props} />
+))
 
 export function RegisterPatients({ onSuccess }: RegisterPatientsProps) {
     const queryClient = useQueryClient()
@@ -102,20 +104,16 @@ export function RegisterPatients({ onSuccess }: RegisterPatientsProps) {
 
             let profileImageUrl = undefined
             if (avatarFile) {
-                const avatarData = new FormData()
-                avatarData.append('file', avatarFile)
-                const response = await api.post<{ url: string }>("/attachments", avatarData)
-                profileImageUrl = response.data.url
+                const response = await uploadAttachment(avatarFile)
+                profileImageUrl = response.url
             }
 
             let attachmentIds: string[] = []
             if (selectedFiles.length > 0) {
                 attachmentIds = await Promise.all(
                     selectedFiles.map(async (file) => {
-                        const formData = new FormData()
-                        formData.append('file', file)
-                        const response = await api.post<{ attachmentId: string }>("/attachments", formData)
-                        return response.data.attachmentId
+                        const response = await uploadAttachment(file)
+                        return response.attachmentId
                     })
                 )
             }
@@ -153,21 +151,22 @@ export function RegisterPatients({ onSuccess }: RegisterPatientsProps) {
     return (
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:rounded-xl">
             <DialogHeader>
-                <DialogTitle>Novo Prontuário</DialogTitle>
+                <DialogTitle className="text-xl font-bold tracking-tight">Novo Prontuário</DialogTitle>
                 <DialogDescription>
                     Cadastre as informações básicas do paciente para iniciar o acompanhamento.
                 </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="grid gap-6 py-4">
-                <PatientAvatarUpload onFileSelect={setAvatarFile} />
+                <section aria-label="Foto de perfil">
+                    <PatientAvatarUpload onFileSelect={setAvatarFile} />
+                </section>
 
-                <div className="border-t my-2" />
-
-                <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 px-1">
+                <fieldset className="space-y-4">
+                    <legend className="text-sm font-semibold text-foreground flex items-center gap-2 px-1 mb-4">
+                        <Contact className="size-4 text-blue-500" />
                         Dados Pessoais
-                    </h3>
+                    </legend>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="firstName" className={cn(errors.firstName && "text-red-500")}>Nome *</Label>
@@ -175,6 +174,8 @@ export function RegisterPatients({ onSuccess }: RegisterPatientsProps) {
                                 id="firstName"
                                 name="firstName"
                                 placeholder="Ex: Ana"
+                                autoComplete="given-name"
+                                aria-invalid={errors.firstName}
                                 className={cn(errors.firstName && "border-red-500 focus-visible:ring-red-500")}
                             />
                         </div>
@@ -184,18 +185,21 @@ export function RegisterPatients({ onSuccess }: RegisterPatientsProps) {
                                 id="lastName"
                                 name="lastName"
                                 placeholder="Ex: Silva"
+                                autoComplete="family-name"
+                                aria-invalid={errors.lastName}
                                 className={cn(errors.lastName && "border-red-500 focus-visible:ring-red-500")}
                             />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="cpf" className={cn(errors.cpf && "text-red-500")}>CPF *</Label>
-                            <Input
+                            <MaskedInput
                                 id="cpf"
                                 name="cpf"
+                                mask="000.000.000-00"
                                 placeholder="000.000.000-00"
                                 value={cpf}
-                                maxLength={14}
-                                onChange={(e) => setCpf(formatCPF(e.target.value))}
+                                onAccept={(value: string) => setCpf(value)}
+                                aria-invalid={errors.cpf}
                                 className={cn(errors.cpf && "border-red-500 focus-visible:ring-red-500")}
                             />
                         </div>
@@ -205,8 +209,9 @@ export function RegisterPatients({ onSuccess }: RegisterPatientsProps) {
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant={"outline"}
+                                        aria-label="Selecionar data de nascimento"
                                         className={cn(
-                                            "w-full justify-start text-left font-normal",
+                                            "w-full justify-start text-left font-normal cursor-pointer",
                                             !date && "text-muted-foreground",
                                             errors.dateOfBirth && "border-red-500 text-red-500"
                                         )}
@@ -229,33 +234,45 @@ export function RegisterPatients({ onSuccess }: RegisterPatientsProps) {
                             </Popover>
                         </div>
                     </div>
-                </div>
+                </fieldset>
 
-                <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 pt-2 border-t px-1">
+                <fieldset className="space-y-4">
+                    <legend className="text-sm font-semibold text-foreground flex items-center gap-2 pt-2 border-t w-full px-1 mb-4">
+                        <ShieldCheck className="size-4 text-blue-500" />
                         Contato e Acesso
-                    </h3>
+                    </legend>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="phoneNumber" className={cn(errors.phoneNumber && "text-red-500")}>Celular / WhatsApp *</Label>
-                            <Input
+                            <MaskedInput
                                 id="phoneNumber"
                                 name="phoneNumber"
+                                mask="(00) 00000-0000"
+                                type="tel"
+                                autoComplete="tel"
                                 placeholder="(00) 00000-0000"
                                 value={phone}
-                                maxLength={15}
-                                onChange={(e) => setPhone(formatPhone(e.target.value))}
+                                onAccept={(value: string) => setPhone(value)}
+                                aria-invalid={errors.phoneNumber}
                                 className={cn(errors.phoneNumber && "border-red-500 focus-visible:ring-red-500")}
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label>Gênero</Label>
+                            <Label htmlFor="gender-select">Gênero</Label>
                             <Select value={gender} onValueChange={setGender}>
-                                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                                <SelectTrigger id="gender-select" className="cursor-pointer">
+                                    <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="FEMININE"><div className="flex items-center gap-2"><Venus className="h-4 w-4 text-rose-500" /> Feminino</div></SelectItem>
-                                    <SelectItem value="MASCULINE"><div className="flex items-center gap-2"><Mars className="h-4 w-4 text-blue-500" /> Masculino</div></SelectItem>
-                                    <SelectItem value="OTHER"><div className="flex items-center gap-2"><Users className="h-4 w-4 text-violet-500" /> Outro</div></SelectItem>
+                                    <SelectItem value="FEMININE" className="cursor-pointer">
+                                        <div className="flex items-center gap-2"><Venus className="h-4 w-4 text-rose-500" /> Feminino</div>
+                                    </SelectItem>
+                                    <SelectItem value="MASCULINE" className="cursor-pointer">
+                                        <div className="flex items-center gap-2"><Mars className="h-4 w-4 text-blue-500" /> Masculino</div>
+                                    </SelectItem>
+                                    <SelectItem value="OTHER" className="cursor-pointer">
+                                        <div className="flex items-center gap-2"><Users className="h-4 w-4 text-violet-500" /> Outro</div>
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -265,7 +282,9 @@ export function RegisterPatients({ onSuccess }: RegisterPatientsProps) {
                                 id="email"
                                 name="email"
                                 type="email"
+                                autoComplete="email"
                                 placeholder="email@exemplo.com"
+                                aria-invalid={errors.email}
                                 className={cn(errors.email && "border-red-500 focus-visible:ring-red-500")}
                             />
                         </div>
@@ -276,28 +295,37 @@ export function RegisterPatients({ onSuccess }: RegisterPatientsProps) {
                                     id="password"
                                     name="password"
                                     type={showPassword ? "text" : "password"}
+                                    autoComplete="new-password"
                                     placeholder="Mínimo 6 caracteres"
+                                    aria-invalid={errors.password}
                                     className={cn("pr-10", errors.password && "border-red-500 focus-visible:ring-red-500")}
                                 />
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent cursor-pointer"
                                     onClick={() => setShowPassword(!showPassword)}
+                                    aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
                                 >
                                     {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                                 </Button>
                             </div>
                         </div>
                     </div>
-                </div>
+                </fieldset>
 
-                <UploadZone selectedFiles={selectedFiles} onFilesChange={setSelectedFiles} />
+                <section aria-label="Anexos e documentos">
+                    <UploadZone selectedFiles={selectedFiles} onFilesChange={setSelectedFiles} />
+                </section>
 
                 <div className="flex justify-end pt-2">
-                    <Button type="submit" disabled={isPending || isUploading} className="cursor-pointer gap-2 w-full lg:w-auto shrink-0 bg-blue-600 hover:bg-blue-700 shadow-sm transition-all">
-                        {(isPending || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button
+                        type="submit"
+                        disabled={isPending || isUploading}
+                        className="gap-2 w-full lg:w-auto shrink-0 bg-blue-600 hover:bg-blue-700 shadow-sm transition-all active:scale-95 cursor-pointer"
+                    >
+                        {(isPending || isUploading) && <Loader2 className="h-4 w-4 animate-spin" />}
                         {isPending || isUploading ? "Salvando..." : "Cadastrar Paciente"}
                     </Button>
                 </div>

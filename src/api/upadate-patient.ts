@@ -1,35 +1,29 @@
 import { api } from "@/lib/axios"
+import { format } from "date-fns"
 import type { Gender } from "@/types/enum-gender"
-
-// Mantendo sua definição de Role
-type Role = "PATIENT" | "ADMIN" | "DOCTOR" 
 
 export interface UpdatePatientData {
     id: string
     firstName?: string
     lastName?: string
-    socialName?: string
-    email?: string
-    password?: string
     phoneNumber?: string
     profileImageUrl?: string
-    dateOfBirth?: Date | string
+    dateOfBirth?: Date | string | null
     cpf?: string
     gender?: Gender
-    role?: Role
-    isActive?: boolean 
-    attachmentIds?: string[] 
+    isActive?: boolean
+    attachmentIds?: string[]
 }
 
-export async function updatePatient({ id, ...data }: UpdatePatientData) {
+export async function updatePatients({ id, ...data }: UpdatePatientData) {
     const formattedData = {
         ...data,
         dateOfBirth:
             data.dateOfBirth instanceof Date
-                ? data.dateOfBirth.toISOString().split('T')[0]
-                : data.dateOfBirth,
-        cpf: data.cpf?.replace(/\D/g, ''),
-        phoneNumber: data.phoneNumber?.replace(/\D/g, ''),
+                ? format(data.dateOfBirth, "yyyy-MM-dd")
+                : data.dateOfBirth || undefined,
+        cpf: data.cpf || undefined,
+        phoneNumber: data.phoneNumber || undefined,
     }
 
     const payload = Object.fromEntries(
@@ -38,6 +32,6 @@ export async function updatePatient({ id, ...data }: UpdatePatientData) {
         )
     )
 
-    const response = await api.put(`/patients/${id}`, payload)
+    const response = await api.put(`/patient/${id}`, payload)
     return response.data
 }

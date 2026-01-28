@@ -8,7 +8,7 @@ export interface RegisterPatientsBody {
   lastName: string
   phoneNumber?: string
   profileImageUrl?: string
-  dateOfBirth?: Date | string
+  dateOfBirth?: Date | string | null
   cpf?: string
   role?: PatientRole
   gender?: Gender
@@ -20,12 +20,13 @@ export interface RegisterPatientsBody {
 export async function registerPatients(data: RegisterPatientsBody) {
   const formattedData = {
     ...data,
-    cpf: data.cpf ? data.cpf.replace(/\D/g, "") : undefined,
-    phoneNumber: data.phoneNumber ? data.phoneNumber.replace(/\D/g, "") : undefined,
+    cpf: data.cpf || undefined,
+    phoneNumber: data.phoneNumber || undefined,
+    
     dateOfBirth:
       data.dateOfBirth instanceof Date
         ? format(data.dateOfBirth, "yyyy-MM-dd")
-        : data.dateOfBirth,
+        : data.dateOfBirth || undefined,
   }
 
   const response = await api.post("/patient", formattedData)

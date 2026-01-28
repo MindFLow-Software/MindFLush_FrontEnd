@@ -70,7 +70,7 @@ export function DeleteActionButton({
                 </AlertDialogHeader>
 
                 <AlertDialogFooter className="mt-4">
-                    <AlertDialogCancel disabled={isLoading} className="rounded-xl border-none hover:bg-muted/50">
+                    <AlertDialogCancel disabled={isLoading} className="cursor-pointer rounded-xl border-none hover:bg-muted/50">
                         Cancelar
                     </AlertDialogCancel>
                     <AlertDialogAction

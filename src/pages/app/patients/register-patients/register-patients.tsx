@@ -7,10 +7,11 @@ import { z } from "zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { format, isValid, parse } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { Loader2, CalendarIcon, Venus, Mars, Users, ShieldCheck, Contact } from "lucide-react"
+import { Loader2, CalendarIcon, Venus, Mars, Users, ShieldCheck, Contact, FileText } from "lucide-react"
 import { toast } from "sonner"
 import { AxiosError } from "axios"
 import { IMaskMixin } from "react-imask"
+
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -18,13 +19,33 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+
 import { registerPatients } from "@/api/create-patients"
+import { updatePatients } from "@/api/upadate-patient"
 import { uploadAttachment } from "@/api/attachments"
 import { cn } from "@/lib/utils"
+
 import { UploadZone } from "./upload-zone"
 import { PatientAvatarUpload } from "./patient-avatar-upload"
+import { AttachmentsList } from "./attachments-list"
 
-const registerPatientSchema = z.object({
+function isValidCPF(cpf: string): boolean {
+    const cleanCPF = cpf.replace(/\D/g, "")
+    if (cleanCPF.length !== 11 || /^(\d)\1{10}$/.test(cleanCPF)) return false
+    let sum = 0, remainder
+    for (let i = 1; i <= 9; i++) sum += parseInt(cleanCPF.substring(i - 1, i)) * (11 - i)
+    remainder = (sum * 10) % 11
+    if (remainder === 10 || remainder === 11) remainder = 0
+    if (remainder !== parseInt(cleanCPF.substring(9, 10))) return false
+    sum = 0
+    for (let i = 1; i <= 10; i++) sum += parseInt(cleanCPF.substring(i - 1, i)) * (12 - i)
+    remainder = (sum * 10) % 11
+    if (remainder === 10 || remainder === 11) remainder = 0
+    if (remainder !== parseInt(cleanCPF.substring(10, 11))) return false
+    return true
+}
+
+const patientSchema = z.object({
     firstName: z.string().min(1, "Obrigatório"),
     lastName: z.string().min(1, "Obrigatório"),
     phoneNumber: z.string().optional(),
@@ -34,46 +55,56 @@ const registerPatientSchema = z.object({
         .refine((date) => !date || date <= new Date(), {
             message: "Data de nascimento inválida",
         }),
-    cpf: z.string().optional(),
+    cpf: z.string().optional().or(z.literal("")).refine((val) => {
+        if (!val) return true
+        return isValidCPF(val)
+    }, {
+        message: "CPF inválido",
+    }),
     gender: z.enum(["FEMININE", "MASCULINE", "OTHER"]),
 })
 
-type RegisterPatientData = z.infer<typeof registerPatientSchema>
+type PatientFormData = z.infer<typeof patientSchema>
 
 const MaskedInput = IMaskMixin(({ inputRef, ...props }: any) => (
     <Input ref={inputRef} {...props} />
 ))
 
-export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
+interface RegisterPatientsProps {
+    patient?: any
+    onSuccess?: () => void
+}
+
+export function RegisterPatients({ patient, onSuccess }: RegisterPatientsProps) {
+    const isEditMode = !!patient
     const queryClient = useQueryClient()
     const [avatarFile, setAvatarFile] = useState<File | null>(null)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const [isUploading, setIsUploading] = useState(false)
     const [calendarOpen, setCalendarOpen] = useState(false)
 
-    const { register, handleSubmit, control, reset, formState: { errors } } = useForm<RegisterPatientData>({
-        resolver: zodResolver(registerPatientSchema),
+    const { register, handleSubmit, control, reset, formState: { errors } } = useForm<PatientFormData>({
+        resolver: zodResolver(patientSchema),
         defaultValues: {
-            firstName: "",
-            lastName: "",
-            phoneNumber: "",
-            cpf: "",
-            gender: "FEMININE",
-            dateOfBirth: null,
+            firstName: patient?.firstName ?? "",
+            lastName: patient?.lastName ?? "",
+            phoneNumber: patient?.phoneNumber ?? "",
+            cpf: patient?.cpf ?? "",
+            gender: patient?.gender ?? "FEMININE",
+            dateOfBirth: patient?.dateOfBirth ? new Date(patient.dateOfBirth) : null,
         }
     })
 
-    const { mutateAsync: registerPatientFn, isPending } = useMutation({
-        mutationFn: registerPatients,
+    const { mutateAsync: savePatientFn, isPending } = useMutation({
+        mutationFn: (data: any) => isEditMode ? updatePatients(data) : registerPatients(data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['unseen-popups'] })
             queryClient.invalidateQueries({ queryKey: ["patients"] })
-            queryClient.invalidateQueries({ queryKey: ["metrics"] })
-            toast.success("Paciente cadastrado com sucesso!")
+            queryClient.invalidateQueries({ queryKey: ["attachments", patient?.id] })
+            toast.success(isEditMode ? "Prontuário atualizado!" : "Paciente cadastrado com sucesso!")
             onSuccess?.()
         },
         onError: (err) => {
-            let errorMessage = "Erro ao cadastrar paciente."
+            let errorMessage = "Erro ao processar solicitação."
             if (err instanceof AxiosError && err.response) {
                 errorMessage = err.response.data?.message || "Erro na comunicação com o servidor."
             }
@@ -81,11 +112,11 @@ export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
         }
     })
 
-    async function onSubmit(data: RegisterPatientData) {
+    async function onSubmit(data: PatientFormData) {
         try {
             setIsUploading(true)
 
-            let profileImageUrl = undefined
+            let profileImageUrl = patient?.profileImageUrl
             if (avatarFile) {
                 const response = await uploadAttachment(avatarFile)
                 profileImageUrl = response.url
@@ -101,9 +132,9 @@ export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
                 )
             }
 
-            await registerPatientFn({
-                firstName: data.firstName,
-                lastName: data.lastName,
+            await savePatientFn({
+                ...data,
+                id: patient?.id,
                 phoneNumber: data.phoneNumber || undefined,
                 dateOfBirth: data.dateOfBirth || undefined,
                 cpf: data.cpf || undefined,
@@ -112,12 +143,14 @@ export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
                 isActive: true,
                 expertise: "OTHER" as any,
                 profileImageUrl,
-                attachmentIds,
+                attachmentIds: attachmentIds.length > 0 ? attachmentIds : undefined,
             })
 
-            reset()
-            setAvatarFile(null)
-            setSelectedFiles([])
+            if (!isEditMode) {
+                reset()
+                setAvatarFile(null)
+                setSelectedFiles([])
+            }
         } catch (error) {
             console.error(error)
         } finally {
@@ -128,15 +161,23 @@ export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
     return (
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:rounded-xl">
             <DialogHeader>
-                <DialogTitle className="text-xl font-bold tracking-tight">Novo Prontuário</DialogTitle>
+                <DialogTitle className="text-xl font-bold tracking-tight">
+                    {isEditMode ? "Editar Prontuário" : "Novo Prontuário"}
+                </DialogTitle>
                 <DialogDescription>
-                    Crie um novo prontuário para iniciar o acompanhamento do paciente.
+                    {isEditMode
+                        ? `Atualize as informações do prontuário de ${patient.firstName}.`
+                        : "Inicie o acompanhamento apenas com o nome. Você pode completar os demais dados depois."
+                    }
                 </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6 py-4">
                 <section aria-label="Foto de perfil">
-                    <PatientAvatarUpload onFileSelect={setAvatarFile} />
+                    <PatientAvatarUpload
+                        onFileSelect={setAvatarFile}
+                        defaultValue={patient?.profileImageUrl}
+                    />
                 </section>
 
                 <fieldset className="space-y-4">
@@ -171,7 +212,7 @@ export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
                     </legend>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>CPF</Label>
+                            <Label className={cn(errors.cpf && "text-red-500")}>CPF</Label>
                             <Controller
                                 name="cpf"
                                 control={control}
@@ -181,9 +222,11 @@ export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
                                         inputRef={ref}
                                         mask="000.000.000-00"
                                         placeholder="000.000.000-00"
+                                        className={cn(errors.cpf && "border-red-500 focus-visible:ring-red-500")}
                                     />
                                 )}
                             />
+                            {errors.cpf && <p className="text-[10px] text-red-500 font-bold uppercase mt-1">{errors.cpf.message}</p>}
                         </div>
                         <div className="space-y-2">
                             <Label>Celular / WhatsApp</Label>
@@ -206,26 +249,17 @@ export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
                                 name="dateOfBirth"
                                 control={control}
                                 render={({ field }) => {
-                                    const [inputValue, setInputValue] = useState(
-                                        field.value ? format(field.value, "dd/MM/yyyy") : ""
-                                    )
-
+                                    const [inputValue, setInputValue] = useState(field.value ? format(field.value, "dd/MM/yyyy") : "")
                                     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                                         let val = e.target.value.replace(/\D/g, "")
                                         if (val.length > 2) val = val.slice(0, 2) + "/" + val.slice(2)
                                         if (val.length > 5) val = val.slice(0, 5) + "/" + val.slice(5, 10)
                                         setInputValue(val)
-
                                         if (val.length === 10) {
                                             const parsedDate = parse(val, "dd/MM/yyyy", new Date())
-                                            if (isValid(parsedDate)) {
-                                                field.onChange(parsedDate)
-                                            } else {
-                                                field.onChange(null)
-                                            }
-                                        } else if (val.length === 0) {
-                                            field.onChange(null)
-                                        }
+                                            if (isValid(parsedDate)) field.onChange(parsedDate)
+                                            else field.onChange(null)
+                                        } else if (val.length === 0) field.onChange(null)
                                     }
 
                                     return (
@@ -239,12 +273,7 @@ export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
                                                     className={cn("pr-10", errors.dateOfBirth && "border-red-500 focus-visible:ring-red-500")}
                                                 />
                                                 <PopoverTrigger asChild>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent cursor-pointer text-muted-foreground"
-                                                    >
+                                                    <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3 py-2 text-muted-foreground cursor-pointer">
                                                         <CalendarIcon className="size-4" />
                                                     </Button>
                                                 </PopoverTrigger>
@@ -253,7 +282,6 @@ export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
                                                 <Calendar
                                                     mode="single"
                                                     selected={field.value ?? undefined}
-                                                    captionLayout="dropdown"
                                                     fromYear={1900}
                                                     toYear={new Date().getFullYear()}
                                                     disabled={(date) => date > new Date()}
@@ -269,11 +297,7 @@ export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
                                     )
                                 }}
                             />
-                            {errors.dateOfBirth && (
-                                <p className="text-[10px] text-red-500 font-bold uppercase mt-1">
-                                    {errors.dateOfBirth.message}
-                                </p>
-                            )}
+                            {errors.dateOfBirth && <p className="text-[10px] text-red-500 font-bold uppercase mt-1">{errors.dateOfBirth.message}</p>}
                         </div>
                         <div className="space-y-2">
                             <Label>Gênero</Label>
@@ -286,15 +310,9 @@ export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
                                             <SelectValue placeholder="Selecione" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="FEMININE" className="cursor-pointer">
-                                                <div className="flex items-center gap-2"><Venus className="h-4 w-4 text-rose-500" /> Feminino</div>
-                                            </SelectItem>
-                                            <SelectItem value="MASCULINE" className="cursor-pointer">
-                                                <div className="flex items-center gap-2"><Mars className="h-4 w-4 text-blue-500" /> Masculino</div>
-                                            </SelectItem>
-                                            <SelectItem value="OTHER" className="cursor-pointer">
-                                                <div className="flex items-center gap-2"><Users className="h-4 w-4 text-violet-500" /> Outro</div>
-                                            </SelectItem>
+                                            <SelectItem value="FEMININE" className="cursor-pointer"><div className="flex items-center gap-2"><Venus className="h-4 w-4 text-rose-500" /> Feminino</div></SelectItem>
+                                            <SelectItem value="MASCULINE" className="cursor-pointer"><div className="flex items-center gap-2"><Mars className="h-4 w-4 text-blue-500" /> Masculino</div></SelectItem>
+                                            <SelectItem value="OTHER" className="cursor-pointer"><div className="flex items-center gap-2"><Users className="h-4 w-4 text-violet-500" /> Outro</div></SelectItem>
                                         </SelectContent>
                                     </Select>
                                 )}
@@ -303,9 +321,23 @@ export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
                     </div>
                 </fieldset>
 
-                <section aria-label="Anexos e documentos">
-                    <UploadZone selectedFiles={selectedFiles} onFilesChange={setSelectedFiles} />
-                </section>
+                <fieldset className="space-y-4">
+                    <legend className="text-sm font-semibold text-foreground flex items-center gap-2 pt-2 border-t w-full px-1 mb-4">
+                        <FileText className="size-4 text-blue-500" />
+                        Documentos e Anexos
+                    </legend>
+
+                    {isEditMode && (
+                        <div className="mb-4 bg-muted/30 rounded-lg p-2 border border-dashed">
+                            <AttachmentsList patientId={patient.id} />
+                        </div>
+                    )}
+
+                    <UploadZone
+                        selectedFiles={selectedFiles}
+                        onFilesChange={setSelectedFiles}
+                    />
+                </fieldset>
 
                 <div className="flex justify-end pt-2">
                     <Button
@@ -314,10 +346,10 @@ export function RegisterPatients({ onSuccess }: { onSuccess?: () => void }) {
                         className="gap-2 w-full lg:w-auto shrink-0 bg-blue-600 hover:bg-blue-700 shadow-sm transition-all active:scale-95 cursor-pointer"
                     >
                         {(isPending || isUploading) && <Loader2 className="h-4 w-4 animate-spin" />}
-                        {isPending || isUploading ? "Salvando..." : "Cadastrar Paciente"}
+                        {isPending || isUploading ? "Salvando..." : (isEditMode ? "Salvar Alterações" : "Cadastrar Paciente")}
                     </Button>
                 </div>
             </form>
-        </DialogContent >
+        </DialogContent>
     )
 }

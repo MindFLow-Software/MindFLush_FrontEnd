@@ -6,6 +6,7 @@ import {
     CalendarDays, Phone, Fingerprint, AtSign, CheckCircle2, XCircle
 } from "lucide-react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { format } from "date-fns"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,11 +15,11 @@ import { Dialog } from "@/components/ui/dialog"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { PatientsDetails } from "./patients-details"
-import { EditPatient } from "../edit-patient/edit-patient-dialog"
+// 🟢 Importamos o novo componente unificado (ajuste o caminho se necessário)
+import { RegisterPatients } from "../register-patients/register-patients"
 import { DeletePatientDialog } from "./delete-patient-dialog"
 import { deletePatients } from "@/api/delete-patients"
 
-import type { UpdatePatientData } from "@/api/upadate-patient"
 import type { Patient } from "@/api/get-patients"
 
 import { formatCPF } from "@/utils/formatCPF"
@@ -47,12 +48,8 @@ export function PatientsTableRow({ patient }: PatientsTableRowProps) {
     })
 
     const isValidDate = dateOfBirth && !isNaN(new Date(dateOfBirth).getTime())
-
-    const patientDataForEdit: UpdatePatientData = {
-        id, firstName, lastName, email, cpf, phoneNumber,
-        dateOfBirth: isValidDate ? new Date(dateOfBirth) : new Date(),
-        gender, role: (patient as any).role || "PATIENT", isActive, profileImageUrl: profileImageUrl || ""
-    }
+    const age = isValidDate ? formatAGE(dateOfBirth) : null
+    const ageDisplay = age !== null ? `${age} ${age === 1 ? 'ano' : 'anos'}` : "N/A"
 
     const genderConfig = {
         MASCULINE: { label: "Masculino", icon: Mars, className: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
@@ -146,14 +143,15 @@ export function PatientsTableRow({ patient }: PatientsTableRowProps) {
                     </Tooltip>
                 </TooltipProvider>
             </TableCell>
+
             <TableCell>
                 <div className="flex flex-col">
                     <span className="text-sm font-semibold tabular-nums tracking-tight">
-                        {isValidDate ? `${formatAGE(dateOfBirth)} anos` : "N/A"}
+                        {ageDisplay}
                     </span>
                     <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1 uppercase font-medium">
                         <CalendarDays className="h-2.5 w-2.5" />
-                        {isValidDate ? new Date(dateOfBirth).toLocaleDateString("pt-BR") : "---"}
+                        {isValidDate ? format(new Date(dateOfBirth), "dd/MM/yyyy") : "---"}
                     </span>
                 </div>
             </TableCell>
@@ -207,7 +205,12 @@ export function PatientsTableRow({ patient }: PatientsTableRowProps) {
             </Dialog>
 
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-                {isEditOpen && <EditPatient patient={patientDataForEdit} onClose={() => setIsEditOpen(false)} />}
+                {isEditOpen && (
+                    <RegisterPatients
+                        patient={patient}
+                        onSuccess={() => setIsEditOpen(false)}
+                    />
+                )}
             </Dialog>
 
             <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>

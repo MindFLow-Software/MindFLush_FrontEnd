@@ -1,6 +1,6 @@
 "use client"
 
-import { FileText, Search, X } from "lucide-react"
+import { Search, XCircle } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
@@ -16,17 +16,13 @@ export function AttachmentsTableFilters({
     onClearFilters
 }: AttachmentsTableFiltersProps) {
     return (
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-foreground flex items-center gap-2">
-                <FileText className="size-4 text-primary/70" /> Documentos de pacientes
-            </h3>
-
-            <div className="flex items-center gap-2 w-full md:max-w-md">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+        <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+            <div className="flex flex-col lg:flex-row gap-2 flex-1 lg:items-center">
+                <div className="relative w-full lg:w-auto">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                     <Input
-                        placeholder="Filtrar por nome do arquivo ou paciente..."
-                        className="h-9 pl-9 rounded-xl bg-card border-border text-xs focus-visible:ring-primary"
+                        placeholder="Buscar por nome do arquivo ou paciente"
+                        className="h-8 w-full lg:w-[320px] pl-9"
                         value={search}
                         onChange={(e) => onSearchChange(e.target.value)}
                     />
@@ -34,13 +30,14 @@ export function AttachmentsTableFilters({
 
                 {search && (
                     <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="h-9 rounded-xl text-xs gap-2 border-dashed"
+                        type="button"
                         onClick={onClearFilters}
+                        className="cursor-pointer h-8 px-2 lg:px-3 text-muted-foreground hover:text-destructive gap-2 transition-colors"
                     >
-                        <X className="size-3" />
-                        Limpar
+                        <XCircle className="h-4 w-4" />
+                        Limpar filtros
                     </Button>
                 )}
             </div>

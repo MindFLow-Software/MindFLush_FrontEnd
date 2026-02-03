@@ -1,0 +1,135 @@
+"use client"
+
+import { FileText, Trash2, ExternalLink, User, CalendarDays, HardDrive } from "lucide-react"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
+
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { TableCell, TableRow } from "@/components/ui/table"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
+import type { Attachment } from "@/api/attachments"
+
+interface AttachmentsTableRowProps {
+    attachment: Attachment
+    onDelete: (id: string) => void
+}
+
+export function AttachmentsTableRow({ attachment, onDelete }: AttachmentsTableRowProps) {
+    const { id, filename, fileUrl, contentType, SizeInBytes, uploadedAt, patient } = attachment
+
+    const formatBytes = (bytes: number | undefined | null) => {
+        const value = Number(bytes)
+        if (isNaN(value) || value <= 0) return '0 Bytes'
+        const k = 1024
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+        const i = Math.floor(Math.log(value) / Math.log(k))
+        const unitIndex = Math.min(i, sizes.length - 1)
+        return `${parseFloat((value / Math.pow(k, unitIndex)).toFixed(2))} ${sizes[unitIndex]}`
+    }
+
+    const fileType = contentType.split('/')[1]?.toUpperCase() || 'FILE'
+
+    return (
+        <TableRow
+            className="group hover:bg-muted/50 transition-[background-color,border-color] border-l-2 border-l-transparent hover:border-l-primary/50"
+        >
+            {/* Ação de Visualização Rápida (Estilo Search do Patients) */}
+            <TableCell className="w-[50px]">
+                <TooltipProvider delayDuration={100}>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="cursor-pointer h-8 w-8 rounded-lg opacity-60 group-hover:opacity-100 group-hover:bg-primary/10 transition-[opacity,background-color]"
+                                onClick={() => fileUrl && window.open(fileUrl, '_blank')}
+                            >
+                                <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="text-xs">Abrir arquivo</TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </TableCell>
+
+            {/* Informações do Arquivo */}
+            <TableCell>
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/5 rounded-lg border border-primary/10 group-hover:bg-primary/10 transition-colors">
+                        <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="font-semibold text-sm leading-tight text-foreground truncate max-w-[180px]">
+                            {filename}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground/70 uppercase font-medium tracking-tighter">
+                            {fileType}
+                        </span>
+                    </div>
+                </div>
+            </TableCell>
+
+            {/* Paciente Vinculado */}
+            <TableCell>
+                {patient ? (
+                    <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-full bg-muted/50">
+                            <User className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                        </div>
+                        <span className="text-xs font-medium text-foreground">
+                            {patient.firstName} {patient.lastName}
+                        </span>
+                    </div>
+                ) : (
+                    <Badge variant="secondary" className="bg-zinc-500/10 text-zinc-600 border-zinc-500/20 text-[10px] font-bold uppercase tracking-tight h-[20px]">
+                        Sem vínculo
+                    </Badge>
+                )}
+            </TableCell>
+
+            {/* Tamanho do Arquivo */}
+            <TableCell>
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50 border border-transparent font-mono text-xs font-medium tabular-nums">
+                    <HardDrive className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                    {formatBytes(SizeInBytes)}
+                </div>
+            </TableCell>
+
+            {/* Data de Upload */}
+            <TableCell>
+                <div className="flex flex-col tabular-nums">
+                    <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1 uppercase font-medium">
+                        <CalendarDays className="h-2.5 w-2.5" aria-hidden="true" />
+                        Enviado em
+                    </span>
+                    <span className="text-sm font-semibold tracking-tight">
+                        {uploadedAt ? format(new Date(uploadedAt), "dd/MM/yyyy", { locale: ptBR }) : "—"}
+                    </span>
+                </div>
+            </TableCell>
+
+            {/* Ações (Estilo Trash/Edit do Patients) */}
+            <TableCell className="text-right">
+                <div className="flex justify-end gap-2 pr-2">
+                    <TooltipProvider delayDuration={100}>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => onDelete(id)}
+                                    className="cursor-pointer h-8 w-8 rounded-lg transition-[color,background-color] text-muted-foreground hover:text-red-600 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-500"
+                                >
+                                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="text-xs">Excluir documento</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+            </TableCell>
+        </TableRow>
+    )
+}

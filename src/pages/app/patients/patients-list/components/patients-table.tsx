@@ -9,8 +9,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Skeleton } from "@/components/ui/skeleton"
 import { PatientsTableRow } from "./patients-table-row"
+import { PatientsTableLoading } from "./loading"
 import type { Patient } from "@/api/get-patients"
 
 interface PatientsTableProps {
@@ -35,51 +35,13 @@ export function PatientsTable({ patients, isLoading, perPage = 10 }: PatientsTab
                         <TableHead className="text-xs uppercase tracking-wider font-semibold">Email</TableHead>
                         <TableHead className="text-xs uppercase tracking-wider font-semibold">Idade / Nasc.</TableHead>
                         <TableHead className="text-xs uppercase tracking-wider font-semibold">Gênero</TableHead>
-                        <TableHead className="text-right pr-7 text-xs uppercase tracking-wider font-semibold">Ações</TableHead>
+                        <TableHead className="text-right pr-12.5 text-xs uppercase tracking-wider font-semibold">Ações</TableHead>
                     </TableRow>
                 </TableHeader>
 
                 <TableBody>
                     {isLoading ? (
-                        Array.from({ length: perPage }).map((_, i) => (
-                            <TableRow key={`skeleton-${i}`}>
-                                <TableCell>
-                                    <Skeleton className="h-4 w-4" />
-                                </TableCell>
-                                <TableCell>
-                                    <div className="flex items-center gap-3">
-                                        <Skeleton className="h-9 w-9 rounded-full" />
-                                        <div className="space-y-2">
-                                            <Skeleton className="h-3 w-[120px]" />
-                                            <Skeleton className="h-3 w-[80px]" />
-                                        </div>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <Skeleton className="h-5 w-16 rounded-full" />
-                                </TableCell>
-                                <TableCell>
-                                    <Skeleton className="h-3 w-[100px]" />
-                                </TableCell>
-                                <TableCell>
-                                    <Skeleton className="h-3 w-[100px]" />
-                                </TableCell>
-                                <TableCell>
-                                    <Skeleton className="h-3 w-[140px]" />
-                                </TableCell>
-                                <TableCell>
-                                    <Skeleton className="h-3 w-[80px]" />
-                                </TableCell>
-                                <TableCell>
-                                    <Skeleton className="h-3 w-[60px]" />
-                                </TableCell>
-                                <TableCell className="text-right pr-6">
-                                    <div className="flex justify-end">
-                                        <Skeleton className="h-8 w-8 rounded-md" />
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ))
+                        <PatientsTableLoading rows={perPage} />
                     ) : patients.length > 0 ? (
                         patients.map((patient) => (
                             <PatientsTableRow

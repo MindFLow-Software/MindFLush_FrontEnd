@@ -30,23 +30,25 @@ export interface GetPatientDetailsResponse {
 }
 
 export async function getPatientDetails(patientId: string, pageIndex: number): Promise<GetPatientDetailsResponse> {
-  const response = await api.get<GetPatientDetailsResponse>(
-    `/patients/${patientId}/details`,
-    {
-      params: { pageIndex },
-    }
-  )
+  const response = await api.get<any>(`/patients/${patientId}/details`, {
+    params: { pageIndex },
+  })
 
-  // Extrai os dados reais para evitar problemas de aninhamento (.props)
-  const raw = (response.data.patient as any).props || response.data.patient
+  const p = response.data.patient
+  const raw = p.props || p 
 
   return {
     ...response.data,
     patient: {
-      ...raw, // Espalha os dados brutos (firstName, lastName, etc)
-      id: raw.id || response.data.patient.id,
-      // Normalização idêntica à da sua tabela (getPatients)
+      id: raw.id || p.id,
+      firstName: raw.firstName || "",
+      lastName: raw.lastName || "",
+      cpf: raw.cpf || "",
+      email: raw.email || "",
+      phoneNumber: raw.phoneNumber || "",
+      status: raw.isActive === false ? 'inactive' : 'active',
       profileImageUrl: raw.profileImageUrl || raw.profile_image_url || null,
-    },
+      sessions: raw.sessions || p.sessions || []
+    }
   }
 }

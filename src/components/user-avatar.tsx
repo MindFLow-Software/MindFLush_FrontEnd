@@ -1,50 +1,40 @@
 "use client"
 
-import { useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
+import { api } from "@/lib/axios"
 
-interface UserAvatarProps {
-    src?: string | null
-    name: string
-    className?: string
-}
+export function UserAvatar({ src, name, className }: { src?: string | null, name: string, className?: string }) {
+    const [imgUrl, setImgUrl] = useState<string | undefined>(undefined)
 
-export function UserAvatar({ src, name, className }: UserAvatarProps) {
-    // 1. Gera apenas as iniciais (Ex: "Paulo Straforini" -> "PS")
     const initials = useMemo(() => {
         if (!name) return ""
         const parts = name.trim().split(/\s+/)
-        if (parts.length >= 2) {
-            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-        }
-        return parts[0][0].toUpperCase()
+        return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase()
     }, [name])
 
-    // 2. Resolve a URL de forma inteligente para evitar duplicação
-    const resolvedSrc = useMemo(() => {
-        if (!src) return undefined
+    useEffect(() => {
+        async function fetchAuthImage() {
+            if (!src) return setImgUrl(undefined)
+            if (src.startsWith("http") || src.startsWith("blob:")) return setImgUrl(src)
 
-        // Se já for um link completo (Blob de preview ou URL do backend), não mexe
-        if (src.startsWith("http") || src.startsWith("blob:")) {
-            return src
+            try {
+                const response = await api.get(`/attachments/${src}`, { responseType: 'blob' })
+                const url = URL.createObjectURL(response.data)
+                setImgUrl(url)
+                return () => URL.revokeObjectURL(url)
+            } catch {
+                setImgUrl(undefined)
+            }
         }
-
-        // Se for apenas o UUID, monta a URL do anexo
-        const baseUrl = import.meta.env.VITE_API_URL
-        return `${baseUrl}/attachments/${src}`
+        fetchAuthImage()
     }, [src])
 
     return (
-        <Avatar className={cn("h-10 w-10 border shrink-0 overflow-hidden bg-muted", className)}>
-            <AvatarImage
-                src={resolvedSrc}
-                alt={name}
-                className="object-cover h-full w-full"
-            />
-            <AvatarFallback className="flex items-center justify-center text-muted-foreground font-medium select-none uppercase">
-                {initials}
-            </AvatarFallback>
+        <Avatar className={cn("h-10 w-10 border shrink-0 bg-muted", className)}>
+            <AvatarImage src={imgUrl} className="object-cover" />
+            <AvatarFallback className="font-bold text-muted-foreground">{initials}</AvatarFallback>
         </Avatar>
     )
 }

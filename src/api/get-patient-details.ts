@@ -5,6 +5,7 @@ export interface GetPatientDetailsResponse {
     id: string
     firstName: string
     lastName: string
+    profileImageUrl: string | null
     cpf: string
     email: string
     phoneNumber: string
@@ -28,13 +29,26 @@ export interface GetPatientDetailsResponse {
   }
 }
 
-export async function getPatientDetails(patientId: string, pageIndex: number) {
-  const response = await api.get<GetPatientDetailsResponse>(
-    `/patients/${patientId}/details`,
-    {
-      params: { pageIndex },
-    }
-  )
+export async function getPatientDetails(patientId: string, pageIndex: number): Promise<GetPatientDetailsResponse> {
+  const response = await api.get<any>(`/patients/${patientId}/details`, {
+    params: { pageIndex },
+  })
 
-  return response.data
+  const p = response.data.patient
+  const raw = p.props || p 
+
+  return {
+    ...response.data,
+    patient: {
+      id: raw.id || p.id,
+      firstName: raw.firstName || "",
+      lastName: raw.lastName || "",
+      cpf: raw.cpf || "",
+      email: raw.email || "",
+      phoneNumber: raw.phoneNumber || "",
+      status: raw.isActive === false ? 'inactive' : 'active',
+      profileImageUrl: raw.profileImageUrl || raw.profile_image_url || null,
+      sessions: raw.sessions || p.sessions || []
+    }
+  }
 }

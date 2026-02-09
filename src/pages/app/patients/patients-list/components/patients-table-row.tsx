@@ -3,7 +3,7 @@
 import { useState } from "react"
 import {
     Search, Trash2, UserCheck, UserPen, Mars, Venus, Users,
-    CalendarDays, Phone, Fingerprint, AtSign, CheckCircle2, XCircle
+    CalendarDays, Phone, Fingerprint, AtSign, CheckCircle2, XCircle, LinkIcon
 } from "lucide-react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { format } from "date-fns"
@@ -25,12 +25,14 @@ import { formatPhone } from "@/utils/formatPhone"
 import { formatAGE } from "@/utils/formatAGE"
 import { UserAvatar } from "@/components/user-avatar"
 import { RegisterPatients } from "../register-patients/register-patients"
+import { useNavigate } from "react-router-dom"
 
 interface PatientsTableRowProps {
     patient: Patient
 }
 
 export function PatientsTableRow({ patient }: PatientsTableRowProps) {
+    const navigate = useNavigate()
     const [isDetailsOpen, setIsDetailsOpen] = useState(false)
     const [isEditOpen, setIsEditOpen] = useState(false)
     const [isDeleteOpen, setIsDeleteOpen] = useState(false)
@@ -171,6 +173,20 @@ export function PatientsTableRow({ patient }: PatientsTableRowProps) {
                                 <Button
                                     size="icon"
                                     variant="ghost"
+                                    onClick={() => navigate(`/patients/${patient.id}/details`)}
+                                    className="cursor-pointer h-8 w-8 rounded-lg transition-all text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50"
+                                >
+                                    <LinkIcon className="h-4 w-4" aria-hidden="true" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="text-xs">Prontuário completo</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
                                     aria-label="Editar informações do paciente"
                                     onClick={() => setIsEditOpen(true)}
                                     className="cursor-pointer h-8 w-8 rounded-lg transition-[color,background-color] text-muted-foreground hover:text-blue-600 hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-blue-500"
@@ -198,6 +214,7 @@ export function PatientsTableRow({ patient }: PatientsTableRowProps) {
                             </TooltipTrigger>
                             <TooltipContent className="text-xs">{isActive ? 'Inativar' : 'Reativar'}</TooltipContent>
                         </Tooltip>
+
                     </TooltipProvider>
                 </div>
             </TableCell>

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Loader2, ClockIcon, Eye } from "lucide-react"
+import { Loader2, Timer , Eye, Info } from "lucide-react"
 import { format, parseISO } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { getPatientDetails } from "@/api/get-patient-details"
@@ -31,6 +31,18 @@ const MaskedInfo = IMaskMixin(({ inputRef, ...props }: any) => (
     />
 ))
 
+function DataField({ value, mask }: { value?: string | null; mask?: string }) {
+    if (!value || value.trim() === "") {
+        return <span className="text-muted-foreground/60 italic text-xs font-normal">Não informado</span>
+    }
+
+    if (mask) {
+        return <MaskedInfo mask={mask} value={value} />
+    }
+
+    return <span className="font-medium text-foreground">{value}</span>
+}
+
 export function PatientsDetails({ patientId }: PatientsDetailsProps) {
     const [pageIndex, setPageIndex] = useState(0)
     const [selectedSession, setSelectedSession] = useState<any | null>(null)
@@ -46,32 +58,31 @@ export function PatientsDetails({ patientId }: PatientsDetailsProps) {
     if (isLoading || !data) {
         return (
             <DialogContent className="flex items-center justify-center p-20">
-                <DialogTitle className="sr-only">Carregando detalhes</DialogTitle>
-                <DialogDescription className="sr-only">Aguarde enquanto carregamos os dados do paciente</DialogDescription>
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </DialogContent>
         )
     }
 
     const { patient, meta } = data
+    const patientFullName = `${patient.firstName ?? ""} ${patient.lastName ?? ""}`.trim() || "Paciente sem nome"
 
     const getStatusLabel = (status: string) => {
         const s = status?.toUpperCase()
         const statuses: Record<string, { label: string; color: string }> = {
             SCHEDULED: { label: "Agendado", color: "text-blue-500" },
             ATTENDING: { label: "Em andamento", color: "text-amber-500" },
-            FINISHED: { label: "Concluída", color: "text-green-500" },
-            CONCLUÍDA: { label: "Concluída", color: "text-green-500" },
+            FINISHED: { label: "Concluída", color: "text-emerald-600" },
+            CONCLUÍDA: { label: "Concluída", color: "text-emerald-600" },
             CANCELED: { label: "Cancelado", color: "text-red-500" },
             NOT_ATTEND: { label: "Não compareceu", color: "text-orange-500" },
             RESCHEDULED: { label: "Remarcado", color: "text-purple-500" },
         }
-        return statuses[s] || { label: status, color: "text-yellow-500" }
+        return statuses[s] || { label: status || "N/A", color: "text-muted-foreground" }
     }
 
     const totalFinished = patient.sessions.filter((session: any) => {
         const s = session.status?.toUpperCase()
-        return s === "FINISHED" || s === "CONCLUÍDA" || s === "CONCLUIDO"
+        return ["FINISHED", "CONCLUÍDA", "CONCLUIDO"].includes(s)
     }).length
 
     return (
@@ -80,173 +91,150 @@ export function PatientsDetails({ patientId }: PatientsDetailsProps) {
             className="max-w-2xl max-h-[90vh] overflow-y-auto"
         >
             <DialogHeader className={selectedSession ? "sr-only" : ""}>
-                <DialogTitle>
-                    {selectedSession
-                        ? `Evolução - ${format(parseISO(selectedSession.date), "dd/MM/yyyy", { locale: ptBR })}`
-                        : `Paciente: ${patient.firstName} ${patient.lastName}`}
+                <DialogTitle className="flex items-center gap-2">
+                    {patientFullName}
                 </DialogTitle>
                 <DialogDescription>
-                    {selectedSession
-                        ? "Visualização detalhada do prontuário eletrônico"
-                        : "Detalhes do paciente e histórico de sessões"}
+                    Informações cadastrais e histórico clínico
                 </DialogDescription>
             </DialogHeader>
 
             {selectedSession ? (
                 <EvolutionViewer
-                    patientName={`${patient.firstName} ${patient.lastName}`}
-                    content={selectedSession.content || ""}
+                    patientName={patientFullName}
+                    content={selectedSession.content || "Nenhuma nota registrada."}
                     date={selectedSession.sessionDate || selectedSession.date || selectedSession.createdAt}
-                    diagnosis={selectedSession.theme}
+                    diagnosis={selectedSession.theme || "Sem tema"}
                     psychologist={{
-                        name: profile
-                            ? `${profile.firstName} ${profile.lastName}`.trim()
-                            : "Psicólogo Responsável",
-                        crp: profile?.crp || ""
+                        name: profile ? `${profile.firstName} ${profile.lastName}` : "Psicólogo Responsável",
+                        crp: profile?.crp || "Não informado"
                     }}
                     onBack={() => setSelectedSession(null)}
                 />
             ) : (
-                <div className="space-y-6">
-                    <Table>
-                        <TableBody>
-                            <TableRow>
-                                <TableCell className="text-muted-foreground">Nome completo</TableCell>
-                                <TableCell className="flex justify-end font-medium">
-                                    {patient.firstName} {patient.lastName}
-                                </TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell className="text-muted-foreground">CPF</TableCell>
-                                <TableCell className="flex justify-end font-medium tabular-nums">
-                                    <MaskedInfo
-                                        mask="000.000.000-00"
-                                        value={patient.cpf}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell className="text-muted-foreground">E-mail</TableCell>
-                                <TableCell className="flex justify-end font-medium lowercase">
-                                    {patient.email}
-                                </TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell className="text-muted-foreground">Telefone</TableCell>
-                                <TableCell className="flex justify-end font-medium tabular-nums">
-                                    <MaskedInfo
-                                        mask="(00) 00000-0000"
-                                        value={patient.phoneNumber}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
+                <div className="space-y-8">
+                    <div className="rounded-lg border bg-card">
+                        <Table>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell className="text-muted-foreground font-medium py-3">Nome completo</TableCell>
+                                    <TableCell className="text-right py-3">
+                                        <DataField value={patientFullName === "Paciente sem nome" ? null : patientFullName} />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="text-muted-foreground font-medium py-3">CPF</TableCell>
+                                    <TableCell className="text-right py-3">
+                                        <DataField value={patient.cpf} mask="000.000.000-00" />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="text-muted-foreground font-medium py-3">E-mail</TableCell>
+                                    <TableCell className="text-right py-3 lowercase">
+                                        <DataField value={patient.email} />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="text-muted-foreground font-medium py-3 border-none">Telefone</TableCell>
+                                    <TableCell className="text-right py-3 border-none">
+                                        <DataField value={patient.phoneNumber} mask="(00) 00000-0000" />
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
 
-                    <Item
-                        variant="outline"
-                        className="bg-sky-50/50 border-sky-200 dark:bg-sky-950/10 dark:border-sky-900"
-                    >
-                        <ItemMedia variant="icon" className="text-sky-600 dark:text-sky-500">
-                            <ClockIcon className="h-5 w-5" />
+                    <Item variant="outline" className=" border-sky-200 dark:bg-sky-950/10 dark:border-sky-900">
+                        <ItemMedia variant="icon" className="text-sky-600">
+                            <Timer  className="h-5 w-5" />
                         </ItemMedia>
                         <ItemContent>
-                            <ItemTitle>Tempo médio de atendimento</ItemTitle>
-                            <ItemTitle className="text-xs font-normal text-muted-foreground">
-                                Média baseada em atendimentos concluídos
-                            </ItemTitle>
+                            <ItemTitle className="text-sm font-semibold">Tempo médio de atendimento</ItemTitle>
+                            <span className="text-xs text-muted-foreground">Média baseada em sessões finalizadas</span>
                         </ItemContent>
                         <ItemActions>
                             <div className="text-right">
-                                <span className="text-lg font-semibold text-sky-700 dark:text-sky-400">
-                                    {meta.averageDuration} min
+                                <span className="text-lg font-bold text-sky-700">
+                                    {meta.averageDuration || 0} min
                                 </span>
-                                <p className="text-xs text-muted-foreground">em sessão</p>
                             </div>
                         </ItemActions>
                     </Item>
 
                     <div className="space-y-4">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Data</TableHead>
-                                    <TableHead>Tema da Sessão</TableHead>
-                                    <TableHead className="text-right">Duração</TableHead>
-                                    <TableHead className="text-right">Status</TableHead>
-                                    <TableHead className="text-right w-[80px]">Docs</TableHead>
-                                </TableRow>
-                            </TableHeader>
+                        <h3 className="text-sm font-bold flex items-center gap-2 px-1">
+                            <Info className="size-4 text-primary" />
+                            Histórico de Atendimentos
+                        </h3>
 
-                            <TableBody>
-                                {patient.sessions.length > 0 ? (
-                                    patient.sessions.map((session: any) => {
-                                        const statusInfo = getStatusLabel(session.status)
-                                        const s = session.status?.toUpperCase()
-                                        const isFinished = s === "FINISHED" || s === "CONCLUÍDA" || s === "CONCLUIDO"
-                                        const formattedDate = format(parseISO(session.date), "dd/MM/yyyy - HH:mm", { locale: ptBR })
-
-                                        return (
-                                            <TableRow key={session.id}>
-                                                <TableCell className="whitespace-nowrap tabular-nums">{formattedDate}</TableCell>
-                                                <TableCell className="max-w-[200px] truncate italic text-muted-foreground">
-                                                    {session.theme || "Sem tema definido"}
-                                                </TableCell>
-                                                <TableCell
-                                                    className={`text-right tabular-nums ${session.duration.includes('Aguardando')
-                                                        ? 'text-muted-foreground italic text-[11px]'
-                                                        : 'font-medium'
-                                                        }`}
-                                                >
-                                                    {session.duration}
-                                                </TableCell>
-                                                <TableCell className={`text-right font-bold ${statusInfo.color}`}>
-                                                    {statusInfo.label}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <TooltipProvider delayDuration={300}>
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="cursor-pointer h-8 w-8 text-primary"
-                                                                    disabled={!isFinished}
-                                                                    onClick={() => setSelectedSession(session)}
-                                                                >
-                                                                    <Eye size={16} />
-                                                                    <span className="sr-only">Ver prontuário</span>
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent side="left">
-                                                                <p>Ver prontuário do paciente</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-                                                    </TooltipProvider>
-                                                </TableCell>
-                                            </TableRow>
-                                        )
-                                    })
-                                ) : (
+                        <div className="rounded-md border">
+                            <Table>
+                                <TableHeader className="bg-muted/50">
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                            Nenhuma sessão registrada.
+                                        <TableHead className="text-xs uppercase">Data</TableHead>
+                                        <TableHead className="text-xs uppercase">Tema</TableHead>
+                                        <TableHead className="text-right text-xs uppercase">Status</TableHead>
+                                        <TableHead className="text-right text-xs uppercase w-[60px]">Ver</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {patient.sessions.length > 0 ? (
+                                        patient.sessions.map((session: any) => {
+                                            const status = getStatusLabel(session.status)
+                                            const isFinished = ["FINISHED", "CONCLUÍDA", "CONCLUIDO"].includes(session.status?.toUpperCase())
+
+                                            return (
+                                                <TableRow key={session.id} className="group">
+                                                    <TableCell className="whitespace-nowrap tabular-nums text-xs">
+                                                        {format(parseISO(session.date), "dd/MM/yy HH:mm", { locale: ptBR })}
+                                                    </TableCell>
+                                                    <TableCell className="max-w-[180px] truncate italic text-muted-foreground text-xs">
+                                                        {session.theme || "Sem tema definido"}
+                                                    </TableCell>
+                                                    <TableCell className={`text-right font-bold text-[10px] uppercase ${status.color}`}>
+                                                        {status.label}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <TooltipProvider>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-7 w-7 cursor-pointer"
+                                                                        disabled={!isFinished}
+                                                                        onClick={() => setSelectedSession(session)}
+                                                                    >
+                                                                        <Eye size={14} className="text-primary" />
+                                                                    </Button>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent side="left">Abrir Documento</TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )
+                                        })
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center text-muted-foreground italic">
+                                                Nenhum registro encontrado.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                                <TableFooter className="bg-transparent border-t">
+                                    <TableRow>
+                                        <TableCell colSpan={3} className="text-xs text-muted-foreground py-4">
+                                            Total de sessões finalizadas
+                                        </TableCell>
+                                        <TableCell className="text-right font-bold py-4">
+                                            {totalFinished}
                                         </TableCell>
                                     </TableRow>
-                                )}
-                            </TableBody>
-
-                            <TableFooter>
-                                <TableRow>
-                                    <TableCell colSpan={4} className="font-medium text-muted-foreground">
-                                        Total de sessões realizadas
-                                    </TableCell>
-                                    <TableCell className="text-right font-bold text-foreground">
-                                        {totalFinished}
-                                    </TableCell>
-                                </TableRow>
-                            </TableFooter>
-                        </Table>
+                                </TableFooter>
+                            </Table>
+                        </div>
 
                         <PaginationDetailsPatients
                             pageIndex={meta.pageIndex}

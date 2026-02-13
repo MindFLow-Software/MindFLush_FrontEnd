@@ -2,7 +2,7 @@
 
 import { useNavigate, useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
     Activity, DollarSign, ShieldCheck, Lock, FileSearch,
     AlertCircle, Loader2, Plus, Download, MoreVertical, Printer, Trash2, MoveLeft
@@ -19,6 +19,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
 import { getPatientDetails } from "@/api/get-patient-details"
 import { PatientDetailsHeader } from "./components/patient-details-header"
 import { useHeaderStore } from "@/hooks/use-header-store"
@@ -32,49 +33,65 @@ export default function PatientDetails() {
     const { setTitle, setSubtitle } = useHeaderStore()
 
     const [pageIndex, setPageIndex] = useState(0)
-
     const [currentTab, setCurrentTab] = useState("clinical")
 
-    const { data, isLoading, isError } = useQuery({
+    // 1. Hook de Query com staleTime padronizado
+    const { data: result, isLoading, isError } = useQuery({
         queryKey: ["patient-details", id, pageIndex],
         queryFn: () => getPatientDetails(id!, pageIndex),
         enabled: !!id,
+        staleTime: 1000 * 60 * 5,
     })
 
+    // 2. Extração de dados via useMemo (Padrão de Consistência)
+    const patientData = useMemo(() => result?.patient, [result])
+    const meta = useMemo(() => result?.meta, [result])
+
+    // 3. Lógica de Status e Nome (Fontes da verdade)
+    const isPatientActive = useMemo(() => {
+        if (!patientData) return false
+        // Aceita 'active' da API ou o booleano isActive se mapeado
+        const s = String(patientData.status).toLowerCase()
+        return patientData.isActive === true || s === 'active' || s === 'ativo'
+    }, [patientData])
+
+    const patientFullName = useMemo(() =>
+        patientData ? `${patientData.firstName} ${patientData.lastName}` : ""
+        , [patientData])
+
+    // 4. Sincronização do Header (Title/Subtitle)
     useEffect(() => {
         setTitle("Cadastro de Pacientes")
-
-        if (data?.patient) {
-            const name = `${data.patient.firstName} ${data.patient.lastName}`
-            setSubtitle(name)
+        if (patientFullName) {
+            setSubtitle(patientFullName)
         }
-
         return () => setSubtitle(undefined)
-    }, [data, setTitle, setSubtitle])
+    }, [patientFullName, setTitle, setSubtitle])
 
-    if (isLoading) {
+    // 5. Tratamento de Erro Padronizado
+    if (isError) {
         return (
-            <div className="flex h-screen items-center justify-center">
+            <div className="flex flex-col items-center justify-center h-[400px] gap-4">
+                <AlertCircle className="h-10 w-10 text-destructive/50" />
+                <div className="text-center">
+                    <p className="text-destructive font-medium">Erro ao carregar detalhes do paciente 😕</p>
+                    <p className="text-muted-foreground text-sm">Verifique a conexão ou o ID informado.</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+                    Tentar novamente
+                </Button>
+            </div>
+        )
+    }
+
+    // 6. Estado de Loading Padronizado
+    if (isLoading || !patientData || !meta) {
+        return (
+            <div className="flex h-[60vh] items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
             </div>
         )
     }
-
-    if (isError || !data?.patient) {
-        return (
-            <div className="flex flex-col h-screen items-center justify-center gap-4 text-center">
-                <AlertCircle className="h-12 w-12 text-destructive/50" />
-                <div>
-                    <h2 className="text-lg font-semibold">Paciente não encontrado</h2>
-                    <p className="text-muted-foreground text-sm">Verifique o ID ou tente novamente mais tarde.</p>
-                </div>
-                <Button variant="outline" onClick={() => navigate(-1)}>Voltar para tabela</Button>
-            </div>
-        )
-    }
-
-    const { patient, meta } = data
-    const patientFullName = `${patient.firstName} ${patient.lastName}`
 
     return (
         <div className="flex flex-col gap-6">
@@ -113,22 +130,15 @@ export default function PatientDetails() {
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm" className="size-8 p-0 cursor-pointer">
                                     <MoreVertical className="size-4" />
-                                    <span className="sr-only">Mais opções</span>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem className="gap-2 sm:hidden cursor-pointer">
-                                    <Download className="size-4" />
-                                    Exportar PDF
-                                </DropdownMenuItem>
                                 <DropdownMenuItem className="gap-2 cursor-pointer">
-                                    <Printer className="size-4" />
-                                    Imprimir prontuário
+                                    <Printer className="size-4" /> Imprimir prontuário
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="gap-2 text-destructive focus:text-destructive cursor-pointer">
-                                    <Trash2 className="size-4" />
-                                    Arquivar paciente
+                                    <Trash2 className="size-4" /> Arquivar paciente
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -137,8 +147,15 @@ export default function PatientDetails() {
                 <Separator />
             </div>
 
-            <PatientDetailsHeader patient={patient} />
+            {/* Header do Paciente */}
+            <PatientDetailsHeader
+                patient={{
+                    ...patientData,
+                    status: isPatientActive ? 'active' : 'inactive'
+                }}
+            />
 
+            {/* Grid de Métricas */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <MetricCard
                     title="Sessões Totais"
@@ -182,35 +199,35 @@ export default function PatientDetails() {
                 </Card>
             </div>
 
+            {/* Conteúdo em Abas */}
             <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
                 <TabsList className="bg-muted/60 p-1 rounded-lg w-full sm:w-auto">
-                    <TabsTrigger
-                        value="clinical"
-                        className="cursor-pointer rounded-md px-6 text-sm data-[state=active]:shadow-sm"
-                    >
-                        Prontuário
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="timeline"
-                        className="cursor-pointer rounded-md px-6 text-sm data-[state=active]:shadow-sm"
-                    >
-                        Histórico
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="docs"
-                        className="cursor-pointer rounded-md px-6 text-sm data-[state=active]:shadow-sm"
-                    >
-                        Arquivos
-                    </TabsTrigger>
+                    <TabsTrigger value="clinical" className="cursor-pointer rounded-md px-6 text-sm">Prontuário</TabsTrigger>
+                    <TabsTrigger value="timeline" className="cursor-pointer rounded-md px-6 text-sm">Histórico</TabsTrigger>
+                    <TabsTrigger value="docs" className="cursor-pointer rounded-md px-6 text-sm">Arquivos</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="clinical" className="mt-6">
-                    <PatientInfo patient={{ ...patient, totalAppointments: meta.totalCount }} />
+                    <PatientInfo
+                        patient={{
+                            ...patientData,
+                            name: patientFullName,
+                            isActive: isPatientActive,
+                            status: isPatientActive ? 'Ativo' : 'Inativo',
+                            createdAt: (patientData as any).createdAt ?? new Date().toISOString(),
+                            cpf: patientData.cpf ?? "",
+                            email: patientData.email ?? "",
+                            phoneNumber: patientData.phoneNumber ?? "",
+                            dateOfBirth: patientData.dateOfBirth ?? "",
+                            gender: (patientData.gender as any) ?? "OTHER",
+                            totalAppointments: meta.totalCount
+                        }}
+                    />
                 </TabsContent>
 
                 <TabsContent value="timeline" className="mt-6">
                     <PatientSessionsTimeline
-                        sessions={patient.sessions}
+                        sessions={patientData.sessions}
                         meta={meta}
                         pageIndex={pageIndex}
                         onPageChange={setPageIndex}

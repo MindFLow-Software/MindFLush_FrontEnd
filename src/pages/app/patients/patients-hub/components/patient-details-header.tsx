@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { UserAvatar } from "@/components/user-avatar"
-import { Copy } from "lucide-react"
+import { Copy, CheckCircle2, XCircle } from "lucide-react" // 🟢 Adicionado ícones padrão
 
 interface PatientDetailsHeaderProps {
     patient: {
@@ -22,23 +22,12 @@ interface PatientDetailsHeaderProps {
     }
 }
 
-function StatusDot({ status }: { status: "active" | "inactive" }) {
-    return (
-        <span className={cn("relative flex h-2 w-2", status === "active" && "animate-pulse")}>
-            {status === "active" && (
-                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-            )}
-            <span className={cn(
-                "relative inline-flex h-2 w-2 rounded-full",
-                status === "active" ? "bg-emerald-500" : "bg-muted-foreground/40"
-            )} />
-        </span>
-    )
-}
-
 export function PatientDetailsHeader({ patient }: PatientDetailsHeaderProps) {
     const shortId = useMemo(() => patient.id.substring(0, 10).toUpperCase(), [patient.id])
     const fullName = `${patient.firstName} ${patient.lastName}`
+
+    // 🟢 Determina o estado baseado no status vindo da API normalizada
+    const isPatientActive = patient.status === "active"
 
     const handleCopyId = () => {
         navigator.clipboard.writeText(patient.id)
@@ -56,11 +45,12 @@ export function PatientDetailsHeader({ patient }: PatientDetailsHeaderProps) {
                             className="h-16 w-16 border-2 border-background shadow-md ring-1 ring-border"
                         />
 
+                        {/* Status indicador no Avatar (Cores sincronizadas) */}
                         <span className={cn(
                             "absolute -bottom-0.5 -right-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full border-2 border-background",
-                            patient.status === "active" ? "bg-emerald-500" : "bg-muted-foreground/40"
+                            isPatientActive ? "bg-emerald-500" : "bg-zinc-500"
                         )}>
-                            {patient.status === "active" && <span className="h-1.5 w-1.5 rounded-full bg-emerald-200" />}
+                            {isPatientActive && <span className="h-1.5 w-1.5 rounded-full bg-emerald-200 animate-pulse" />}
                         </span>
                     </div>
 
@@ -69,18 +59,17 @@ export function PatientDetailsHeader({ patient }: PatientDetailsHeaderProps) {
                             <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
                                 {fullName}
                             </h1>
-                            <Badge
-                                variant="outline"
-                                className={cn(
-                                    "shrink-0 gap-1.5 text-[11px] font-bold uppercase tracking-wider px-2 py-0.5",
-                                    patient.status === "active"
-                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                        : "border-border bg-muted text-muted-foreground"
-                                )}
-                            >
-                                <StatusDot status={patient.status} />
-                                {patient.status === "active" ? "Ativo" : "Inativo"}
-                            </Badge>
+
+                            {/* 🟢 Badge de Status (Padrão idêntico à Tabela e Info) */}
+                            {isPatientActive ? (
+                                <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20 gap-1.5 h-[22px] px-2 text-[10px] font-bold uppercase tracking-tight">
+                                    <CheckCircle2 className="h-3 w-3" /> Ativo
+                                </Badge>
+                            ) : (
+                                <Badge variant="secondary" className="bg-zinc-500/10 text-zinc-600 border-zinc-500/20 gap-1.5 h-[22px] px-2 text-[10px] font-bold uppercase tracking-tight">
+                                    <XCircle className="h-3 w-3" /> Inativo
+                                </Badge>
+                            )}
                         </div>
 
                         <div className="group inline-flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -96,7 +85,7 @@ export function PatientDetailsHeader({ patient }: PatientDetailsHeaderProps) {
                                     </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom" className="text-xs">
-                                    Copiar ID
+                                    Copiar ID completo
                                 </TooltipContent>
                             </Tooltip>
                         </div>

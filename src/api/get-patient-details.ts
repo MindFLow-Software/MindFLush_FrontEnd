@@ -5,12 +5,13 @@ export interface GetPatientDetailsResponse {
     id: string
     firstName: string
     lastName: string
+    name: string // 🟢 Adicionado para consistência
     profileImageUrl: string | null
     cpf: string
     email: string
     phoneNumber: string
     status: 'active' | 'inactive'
-    // 🟢 Adicione estes campos na Interface
+    isActive: boolean // 🟢 Adicionado como fonte da verdade
     dateOfBirth: string | null 
     gender: 'MASCULINE' | 'FEMININE' | 'OTHER' | null
     sessions: Array<{
@@ -37,11 +38,12 @@ export async function getPatientDetails(patientId: string, pageIndex: number): P
     params: { pageIndex },
   })
 
-  // Log de Debug: Abra o console do navegador e veja se o campo existe aqui
-  console.log("Dados brutos do paciente:", response.data.patient)
-
   const p = response.data.patient
   const raw = p.props || p 
+
+  // 🟢 Lógica de normalização idêntica à listagem e ao backend
+  // Consideramos ativo se isActive for true OU se o status vier como 'active'
+  const checkIsActive = raw.isActive === true || raw.status === 'active'
 
   return {
     ...response.data,
@@ -49,15 +51,19 @@ export async function getPatientDetails(patientId: string, pageIndex: number): P
       id: raw.id || p.id,
       firstName: raw.firstName || "",
       lastName: raw.lastName || "",
+      // Nome concatenado para facilitar o uso no Header e Prontuário
+      name: `${raw.firstName} ${raw.lastName}`.trim(),
       cpf: raw.cpf || "",
       email: raw.email || "",
       phoneNumber: raw.phoneNumber || "",
-      status: raw.isActive === false ? 'inactive' : 'active',
-      profileImageUrl: raw.profileImageUrl || raw.profile_image_url || null,
       
+      // 🟢 SINCRONIA DE STATUS
+      isActive: checkIsActive,
+      status: checkIsActive ? 'active' : 'inactive',
+      
+      profileImageUrl: raw.profileImageUrl || raw.profile_image_url || null,
       dateOfBirth: raw.dateOfBirth || raw.date_of_birth || null, 
       gender: raw.gender || null,
-      
       sessions: raw.sessions || p.sessions || []
     }
   }
